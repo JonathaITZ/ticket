@@ -19,17 +19,13 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #2d3e50; border-radius: 4px; }
         
-        .menu-transition {
-            transition: transform 0.3s ease-in-out;
-        }
+        .menu-transition { transition: transform 0.3s ease-in-out; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fadeIn {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
@@ -39,7 +35,7 @@
     <script type="text/babel">
         const { useState } = React;
 
-        // Ícones SVG
+        // --- Ícones ---
         const IconFileText = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>;
         const IconSend = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
         const IconRefresh = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>;
@@ -48,10 +44,13 @@
         const IconMenu = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
         const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
         const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+        const IconShield = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+        const IconLock = () => <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+        const IconKey = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.5-2.5"/></svg>;
 
-        const SoftcomLogo = () => (
+        const SoftcomLogo = ({ size = "35" }) => (
             <div className="flex items-center gap-2">
-                <svg width="35" height="28" viewBox="0 0 45 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width={size} height={(size * 28)/35} viewBox="0 0 45 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 8C4 6.89543 4.89543 6 6 6H16.5L19.5 9H39C40.1046 9 41 9.89543 41 11V13H4V8Z" fill="#EAB308" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
                     <path d="M2 12C2 10.8954 2.89543 10 4 10H41C42.1046 10 43 10.8954 43 12V28C43 29.1046 42.1046 30 41 30H4C2.89543 30 2 29.1046 2 28V12Z" fill="#FBCC14" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
                 </svg>
@@ -64,11 +63,16 @@
         const App = () => {
             const [view, setView] = useState('migrate');
             const [menuOpen, setMenuOpen] = useState(false);
+            const [isEspecialistaAuthed, setIsEspecialistaAuthed] = useState(false);
+            const [pinInput, setPinInput] = useState('');
+            const [pinError, setPinError] = useState(false);
+            const [copyStatus, setCopyStatus] = useState({});
+
             const [formData, setFormData] = useState({
                 empresa: '', cnpj: '', cidade: '', mensagemErro: '', detalhes: '', ticketAberto: '', ambiente: ''
             });
             const [generatedText, setGeneratedText] = useState('');
-            const [copied, setCopied] = useState(false);
+            const [ticketCopied, setTicketCopied] = useState(false);
 
             const handleInputChange = (e) => {
                 const { name, value } = e.target;
@@ -92,15 +96,21 @@
                 setGeneratedText(text);
             };
 
-            const copyToClipboard = () => {
+            const copyToClipboard = (text, key) => {
                 const textArea = document.createElement("textarea");
-                textArea.value = generatedText;
+                textArea.value = text;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
                 document.body.removeChild(textArea);
+
+                if (key === 'ticket') {
+                    setTicketCopied(true);
+                    setTimeout(() => setTicketCopied(false), 2000);
+                } else {
+                    setCopyStatus(prev => ({ ...prev, [key]: true }));
+                    setTimeout(() => setCopyStatus(prev => ({ ...prev, [key]: false })), 2000);
+                }
             };
 
             const clearForm = () => {
@@ -109,27 +119,45 @@
             };
 
             const toggleMenu = () => setMenuOpen(!menuOpen);
+
             const changeView = (newView) => {
+                if (newView === 'especialista' && !isEspecialistaAuthed) {
+                    setPinInput('');
+                    setPinError(false);
+                }
                 setView(newView);
                 setMenuOpen(false);
             };
 
-            // Lista de Links Úteis
+            const handlePinSubmit = (e) => {
+                e.preventDefault();
+                if (pinInput === '7711') {
+                    setIsEspecialistaAuthed(true);
+                    setPinError(false);
+                } else {
+                    setPinError(true);
+                    setPinInput('');
+                }
+            };
+
             const linksUteis = [
-                { 
-                    title: "Dashboard Migrate", 
-                    url: "https://painel-dfe-production-382497636524.us-central1.run.app/", 
-                    desc: "Painel de monitoramento de serviços e ambientes Migrate (NFS-e)." 
+                { title: "Dashboard Migrate", url: "https://painel-dfe-production-382497636524.us-central1.run.app/", desc: "Painel de monitoramento de serviços e ambientes Migrate (NFS-e)." },
+                { title: "Atendimento Migrate", url: "https://atendimento.migrate.com.br/", desc: "Portal oficial para abertura de tickets e suporte técnico direto com a Migrate." },
+                { title: "Login Invoicy", url: "https://web.invoicy.com.br/login.aspx", desc: "Acesso à plataforma Invoicy para gestão e consulta de documentos fiscais." }
+            ];
+
+            const credenciais = [
+                {
+                    plataforma: "Migrate",
+                    login: "suporte.nfse.softcom@gmail.com",
+                    senha: "Sfc@3321",
+                    color: "border-blue-500"
                 },
-                { 
-                    title: "Atendimento Migrate", 
-                    url: "https://atendimento.migrate.com.br/", 
-                    desc: "Portal oficial para abertura de tickets e suporte técnico direto com a Migrate." 
-                },
-                { 
-                    title: "Login Invoicy", 
-                    url: "https://web.invoicy.com.br/login.aspx", 
-                    desc: "Acesso à plataforma Invoicy para gestão e consulta de documentos fiscais." 
+                {
+                    plataforma: "Invoicy",
+                    login: "renato.rodrigues@softcomtecnologia.com.br",
+                    senha: "Softcom12",
+                    color: "border-emerald-500"
                 }
             ];
 
@@ -138,47 +166,39 @@
                     {/* Header */}
                     <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] z-50">
                         <div className="flex items-center gap-4">
-                            <button onClick={toggleMenu} className="p-2 hover:bg-slate-700 rounded-lg transition-colors" aria-label="Menu">
+                            <button onClick={toggleMenu} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
                                 {menuOpen ? <IconX /> : <IconMenu />}
                             </button>
                             <SoftcomLogo />
                         </div>
                         <div className="hidden md:block text-slate-400 text-xs font-bold uppercase tracking-widest">
-                            {view === 'migrate' ? 'Gerador Ticket Migrate' : 'Links Úteis'}
+                            {view === 'migrate' ? 'Gerador Ticket Migrate' : view === 'links' ? 'Links Úteis' : 'Setor Especialista'}
                         </div>
                     </header>
 
                     {/* Menu Lateral */}
                     <div className={`fixed inset-y-0 left-0 w-64 bg-[#2d3e50] shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-r border-slate-700 pt-24 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                         <nav className="p-4 flex flex-col gap-2">
-                            <button 
-                                onClick={() => changeView('migrate')}
-                                className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'migrate' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}
-                            >
-                                <IconFileText />
-                                TICKET MIGRATE
+                            <button onClick={() => changeView('migrate')} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'migrate' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
+                                <IconFileText /> TICKET MIGRATE
                             </button>
-                            <button 
-                                onClick={() => changeView('links')}
-                                className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'links' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}
-                            >
-                                <IconExternalLink />
-                                LINKS ÚTEIS
+                            <button onClick={() => changeView('links')} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'links' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
+                                <IconExternalLink /> LINKS ÚTEIS
+                            </button>
+                            <div className="my-2 border-t border-slate-700"></div>
+                            <button onClick={() => changeView('especialista')} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'especialista' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
+                                <IconShield /> SETOR ESPECIALISTA
                             </button>
                         </nav>
-                        <div className="absolute bottom-4 left-4 text-[10px] text-slate-500 uppercase font-bold tracking-widest">
-                            v2.2 - Softcom Support
-                        </div>
                     </div>
 
-                    {/* Overlay */}
-                    {menuOpen && (
-                        <div className="fixed inset-0 bg-black/50 z-30 transition-opacity" onClick={toggleMenu}></div>
-                    )}
+                    {menuOpen && <div className="fixed inset-0 bg-black/50 z-30 transition-opacity" onClick={toggleMenu}></div>}
 
-                    {/* Conteúdo */}
+                    {/* Conteúdo Principal */}
                     <main className="max-w-6xl mx-auto w-full p-4 md:p-8 flex-1">
-                        {view === 'migrate' ? (
+                        
+                        {/* VIEW: MIGRATE */}
+                        {view === 'migrate' && (
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
                                 <div className="lg:col-span-7 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
                                     <div className="bg-slate-50 border-b p-4 flex items-center gap-2">
@@ -217,7 +237,7 @@
                                             </div>
                                             <div className="md:col-span-3">
                                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Contexto Extra</label>
-                                                <input name="detalhes" value={formData.detalhes} onChange={handleInputChange} placeholder="Ex: Fizemos a troca de ambiente conforme solicitado..." className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
+                                                <input name="detalhes" value={formData.detalhes} onChange={handleInputChange} placeholder="Ex: Fizemos a troca de ambiente..." className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
                                             </div>
                                         </div>
                                         <div className="flex gap-3 pt-4">
@@ -233,20 +253,23 @@
                                 <div className="lg:col-span-5 flex flex-col gap-4">
                                     <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full">
                                         <div className="bg-[#2d3e50] p-4 flex justify-between items-center text-white">
-                                            <span className="text-xs font-bold uppercase tracking-widest">Texto Gerado</span>
+                                            <span className="text-xs font-bold uppercase tracking-widest">Resultado</span>
                                             {generatedText && (
-                                                <button onClick={copyToClipboard} className={`flex items-center gap-2 px-4 py-1.5 rounded text-xs font-bold transition-all shadow-sm ${copied ? 'bg-green-500 text-white' : 'bg-[#f59e0b] text-[#2d3e50] hover:bg-[#d97706]'}`}>
-                                                    {copied ? <IconCheck /> : <IconClipboard />} {copied ? 'COPIADO' : 'COPIAR'}
+                                                <button onClick={() => copyToClipboard(generatedText, 'ticket')} className={`flex items-center gap-2 px-4 py-1.5 rounded text-xs font-bold transition-all shadow-sm ${ticketCopied ? 'bg-green-500 text-white' : 'bg-[#f59e0b] text-[#2d3e50] hover:bg-[#d97706]'}`}>
+                                                    {ticketCopied ? <IconCheck /> : <IconClipboard />} {ticketCopied ? 'COPIADO' : 'COPIAR'}
                                                 </button>
                                             )}
                                         </div>
                                         <div className="p-6 bg-slate-50 flex-1 min-h-[300px] font-mono text-sm text-slate-700 whitespace-pre-wrap select-all">
-                                            {generatedText || "Preencha os dados à esquerda e clique em gerar..."}
+                                            {generatedText || "O texto gerado aparecerá aqui..."}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        ) : (
+                        )}
+
+                        {/* VIEW: LINKS ÚTEIS */}
+                        {view === 'links' && (
                             <div className="animate-fadeIn max-w-4xl">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="bg-[#f59e0b] p-2 rounded-lg text-[#2d3e50]">
@@ -256,13 +279,7 @@
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {linksUteis.map((link, idx) => (
-                                        <a 
-                                            key={idx} 
-                                            href={link.url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="bg-white p-6 rounded-xl shadow-sm border-2 border-slate-200 hover:border-[#f59e0b] hover:shadow-lg transition-all group flex flex-col gap-2"
-                                        >
+                                        <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-xl shadow-sm border-2 border-slate-200 hover:border-[#f59e0b] hover:shadow-lg transition-all group flex flex-col gap-2">
                                             <div className="flex justify-between items-center">
                                                 <h3 className="font-bold text-lg text-slate-800 group-hover:text-[#f59e0b] transition-colors uppercase tracking-tight">{link.title}</h3>
                                                 <span className="text-[#f59e0b]"><IconExternalLink /></span>
@@ -272,6 +289,111 @@
                                         </a>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* VIEW: SETOR ESPECIALISTA */}
+                        {view === 'especialista' && (
+                            <div className="animate-fadeIn w-full">
+                                {!isEspecialistaAuthed ? (
+                                    /* Tela de PIN */
+                                    <div className="flex flex-col items-center justify-center min-h-[50vh]">
+                                        <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm text-center">
+                                            <div className="mb-6 flex justify-center">
+                                                <div className="bg-slate-100 p-4 rounded-full">
+                                                    <IconLock />
+                                                </div>
+                                            </div>
+                                            <h2 className="text-xl font-bold text-slate-700 mb-2 uppercase tracking-tight">Acesso Restrito</h2>
+                                            <p className="text-slate-500 text-sm mb-6">Insira o PIN de 4 dígitos para acessar as credenciais.</p>
+                                            
+                                            <form onSubmit={handlePinSubmit} className="space-y-4">
+                                                <input 
+                                                    type="password" 
+                                                    maxLength="4"
+                                                    value={pinInput}
+                                                    onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                                                    placeholder="****"
+                                                    className={`w-full text-center text-3xl tracking-[1em] p-4 bg-slate-50 border-2 rounded-xl outline-none transition-all ${pinError ? 'border-red-500 bg-red-50 animate-shake' : 'border-slate-200 focus:border-[#f59e0b]'}`}
+                                                    autoFocus
+                                                />
+                                                {pinError && <p className="text-red-500 text-xs font-bold uppercase tracking-widest">PIN Incorreto</p>}
+                                                <button type="submit" className="w-full bg-[#2d3e50] text-white font-bold py-4 rounded-xl hover:bg-slate-800 transition-all shadow-md">
+                                                    AUTENTICAR
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* Tela de Credenciais */
+                                    <div className="max-w-4xl mx-auto">
+                                        <div className="flex items-center justify-between mb-8 border-b pb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-[#2d3e50] p-2 rounded-lg text-[#f59e0b]">
+                                                    <IconShield />
+                                                </div>
+                                                <h2 className="text-2xl font-bold text-slate-700 tracking-tight">Painel de Credenciais</h2>
+                                            </div>
+                                            <button 
+                                                onClick={() => setIsEspecialistaAuthed(false)} 
+                                                className="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1 rounded transition-colors uppercase tracking-widest"
+                                            >
+                                                Encerrar Sessão
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {credenciais.map((cred, idx) => (
+                                                <div key={idx} className={`bg-white rounded-2xl shadow-md border-t-8 ${cred.color} overflow-hidden`}>
+                                                    <div className="p-6">
+                                                        <div className="flex items-center gap-2 mb-6">
+                                                            <IconKey />
+                                                            <h3 className="font-black text-xl text-slate-700 uppercase italic tracking-tighter">{cred.plataforma}</h3>
+                                                        </div>
+                                                        
+                                                        <div className="space-y-6">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">E-mail / Login</label>
+                                                                <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                                                    <span className="flex-1 font-mono text-sm text-slate-700 truncate">{cred.login}</span>
+                                                                    <button 
+                                                                        onClick={() => copyToClipboard(cred.login, `${idx}-log`)}
+                                                                        className={`p-2 rounded transition-all ${copyStatus[`${idx}-log`] ? 'bg-green-500 text-white' : 'hover:bg-slate-200 text-slate-400'}`}
+                                                                    >
+                                                                        {copyStatus[`${idx}-log`] ? <IconCheck /> : <IconClipboard />}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Senha</label>
+                                                                <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                                                    <span className="flex-1 font-mono text-sm text-slate-700 font-bold">{cred.senha}</span>
+                                                                    <button 
+                                                                        onClick={() => copyToClipboard(cred.senha, `${idx}-pass`)}
+                                                                        className={`p-2 rounded transition-all ${copyStatus[`${idx}-pass`] ? 'bg-green-500 text-white' : 'hover:bg-slate-200 text-slate-400'}`}
+                                                                    >
+                                                                        {copyStatus[`${idx}-pass`] ? <IconCheck /> : <IconClipboard />}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-slate-50 px-6 py-3 border-t flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confidencial</span>
+                                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        
+                                        <div className="mt-12 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                                            <p className="text-xs text-blue-700 font-medium">
+                                                <strong>Aviso:</strong> Estas credenciais são de uso exclusivo do setor de suporte. Não compartilhe com clientes ou terceiros fora da Softcom.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </main>
