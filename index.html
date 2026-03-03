@@ -114,12 +114,22 @@
                 setMenuOpen(false);
             };
 
-            // Lista de Links Úteis - Atualizada para conter apenas o Dashboard Migrate
+            // Lista de Links Úteis
             const linksUteis = [
                 { 
                     title: "Dashboard Migrate", 
                     url: "https://painel-dfe-production-382497636524.us-central1.run.app/", 
                     desc: "Painel de monitoramento de serviços e ambientes Migrate (NFS-e)." 
+                },
+                { 
+                    title: "Atendimento Migrate", 
+                    url: "https://atendimento.migrate.com.br/", 
+                    desc: "Portal oficial para abertura de tickets e suporte técnico direto com a Migrate." 
+                },
+                { 
+                    title: "Login Invoicy", 
+                    url: "https://web.invoicy.com.br/login.aspx", 
+                    desc: "Acesso à plataforma Invoicy para gestão e consulta de documentos fiscais." 
                 }
             ];
 
@@ -157,7 +167,7 @@
                             </button>
                         </nav>
                         <div className="absolute bottom-4 left-4 text-[10px] text-slate-500 uppercase font-bold tracking-widest">
-                            v2.1 - Softcom Support
+                            v2.2 - Softcom Support
                         </div>
                     </div>
 
@@ -237,14 +247,14 @@
                                 </div>
                             </div>
                         ) : (
-                            <div className="animate-fadeIn max-w-2xl">
+                            <div className="animate-fadeIn max-w-4xl">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="bg-[#f59e0b] p-2 rounded-lg text-[#2d3e50]">
                                         <IconExternalLink />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-slate-700 tracking-tight">Recursos Úteis</h2>
+                                    <h2 className="text-2xl font-bold text-slate-700 tracking-tight">Recursos e Portais</h2>
                                 </div>
-                                <div className="grid grid-cols-1 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {linksUteis.map((link, idx) => (
                                         <a 
                                             key={idx} 
@@ -258,7 +268,7 @@
                                                 <span className="text-[#f59e0b]"><IconExternalLink /></span>
                                             </div>
                                             <p className="text-sm text-slate-500 leading-relaxed">{link.desc}</p>
-                                            <div className="mt-2 text-[10px] font-mono text-slate-400 truncate">{link.url}</div>
+                                            <div className="mt-2 text-[10px] font-mono text-slate-400 truncate bg-slate-50 p-1 rounded border border-slate-100">{link.url}</div>
                                         </a>
                                     ))}
                                 </div>
