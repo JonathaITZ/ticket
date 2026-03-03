@@ -3,51 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Tickets NFS-e - Softcom</title>
+    <title>Suporte Softcom - NFS-e</title>
     
-    <!-- Tailwind CSS para Estilização -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React, ReactDOM e Babel para processar JSX no navegador -->
+    <!-- React & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Estilo para garantir que o itálico da logo seja aplicado corretamente */
         .softcom-italic { font-style: italic; }
-        /* Scrollbar personalizada */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #2d3e50; border-radius: 4px; }
+        
+        .menu-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
     <div id="root"></div>
 
-    <!-- Scripts do React -->
     <script type="text/babel">
         const { useState } = React;
 
-        // Ícones em SVG para evitar dependências externas pesadas
+        // Ícones SVG
         const IconFileText = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>;
         const IconSend = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
         const IconRefresh = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>;
         const IconClipboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
         const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+        const IconMenu = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+
+        const SoftcomLogo = () => (
+            <div className="flex items-center gap-2">
+                <svg width="35" height="28" viewBox="0 0 45 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 8C4 6.89543 4.89543 6 6 6H16.5L19.5 9H39C40.1046 9 41 9.89543 41 11V13H4V8Z" fill="#EAB308" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
+                    <path d="M2 12C2 10.8954 2.89543 10 4 10H41C42.1046 10 43 10.8954 43 12V28C43 29.1046 42.1046 30 41 30H4C2.89543 30 2 29.1046 2 28V12Z" fill="#FBCC14" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-2xl font-black italic tracking-tighter text-white select-none softcom-italic" style={{ letterSpacing: '-0.08em' }}>
+                    softcom
+                </span>
+            </div>
+        );
 
         const App = () => {
+            const [view, setView] = useState('migrate');
+            const [menuOpen, setMenuOpen] = useState(false);
             const [formData, setFormData] = useState({
-                empresa: '',
-                cnpj: '',
-                cidade: '',
-                mensagemErro: '',
-                detalhes: '',
-                ticketAberto: '',
-                ambiente: ''
+                empresa: '', cnpj: '', cidade: '', mensagemErro: '', detalhes: '', ticketAberto: '', ambiente: ''
             });
-
             const [generatedText, setGeneratedText] = useState('');
             const [copied, setCopied] = useState(false);
 
@@ -59,33 +78,17 @@
             const generateTicket = () => {
                 const hora = new Date().getHours();
                 const saudacao = hora < 12 ? 'Bom dia' : 'Boa tarde';
-                
                 const subject = `Assunto: ${formData.empresa}`;
-                
-                let text = `${subject}\n\n`;
-                text += `${saudacao},\n\n`;
-                
+                let text = `${subject}\n\n${saudacao},\n\n`;
                 if (formData.ticketAberto) {
                     text += `Em referência ao ticket ${formData.ticketAberto}, informamos que a situação persiste mesmo após as orientações seguidas.\n\n`;
                 } else {
                     text += `Encaminhamos este chamado referente a uma falha na emissão de notas para este contribuinte.\n\n`;
                 }
-
-                text += `**Dados do Emitente:**\n`;
-                text += `* **Empresa:** ${formData.empresa}\n`;
-                text += `* **CNPJ:** ${formData.cnpj}\n`;
-                text += `* **Município:** ${formData.cidade}\n\n`;
-
-                text += `**Descrição do Incidente:**\n`;
-                text += `* O sistema retorna a mensagem: **${formData.mensagemErro}**. `;
-                
-                if (formData.ambiente) {
-                    text += `O ambiente está configurado como **${formData.ambiente}**. `;
-                }
-
-                text += `${formData.detalhes} `;
-                text += `Não foi possível resolver a inconsistência internamente e solicitamos análise técnica.`;
-
+                text += `**Dados do Emitente:**\n* **Empresa:** ${formData.empresa}\n* **CNPJ:** ${formData.cnpj}\n* **Município:** ${formData.cidade}\n\n`;
+                text += `**Descrição do Incidente:**\n* O sistema retorna a mensagem: **${formData.mensagemErro}**. `;
+                if (formData.ambiente) text += `O ambiente está configurado como **${formData.ambiente}**. `;
+                text += `${formData.detalhes} Não foi possível resolver a inconsistência internamente e solicitamos análise técnica.`;
                 setGeneratedText(text);
             };
 
@@ -94,191 +97,177 @@
                 textArea.value = generatedText;
                 document.body.appendChild(textArea);
                 textArea.select();
-                try {
-                    document.execCommand('copy');
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                } catch (err) {
-                    console.error('Erro ao copiar', err);
-                }
+                document.execCommand('copy');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
                 document.body.removeChild(textArea);
             };
 
             const clearForm = () => {
-                setFormData({
-                    empresa: '',
-                    cnpj: '',
-                    cidade: '',
-                    mensagemErro: '',
-                    detalhes: '',
-                    ticketAberto: '',
-                    ambiente: ''
-                });
+                setFormData({ empresa: '', cnpj: '', cidade: '', mensagemErro: '', detalhes: '', ticketAberto: '', ambiente: '' });
                 setGeneratedText('');
             };
 
-            const SoftcomLogo = () => (
-                <div className="flex items-center gap-2">
-                    <svg width="45" height="35" viewBox="0 0 45 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 8C4 6.89543 4.89543 6 6 6H16.5L19.5 9H39C40.1046 9 41 9.89543 41 11V13H4V8Z" fill="#EAB308" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
-                        <path d="M2 12C2 10.8954 2.89543 10 4 10H41C42.1046 10 43 10.8954 43 12V28C43 29.1046 42.1046 30 41 30H4C2.89543 30 2 29.1046 2 28V12Z" fill="#FBCC14" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
-                    </svg>
-                    <span className="text-3xl font-black italic tracking-tighter text-white select-none softcom-italic" style={{ letterSpacing: '-0.08em' }}>
-                        softcom
-                    </span>
-                </div>
-            );
+            const toggleMenu = () => setMenuOpen(!menuOpen);
+            const changeView = (newView) => {
+                setView(newView);
+                setMenuOpen(false);
+            };
+
+            // Lista de Links Úteis - Atualizada para conter apenas o Dashboard Migrate
+            const linksUteis = [
+                { 
+                    title: "Dashboard Migrate", 
+                    url: "https://painel-dfe-production-382497636524.us-central1.run.app/", 
+                    desc: "Painel de monitoramento de serviços e ambientes Migrate (NFS-e)." 
+                }
+            ];
 
             return (
-                <div className="min-h-screen flex flex-col">
-                    <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b]">
-                        <SoftcomLogo />
+                <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+                    {/* Header */}
+                    <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] z-50">
+                        <div className="flex items-center gap-4">
+                            <button onClick={toggleMenu} className="p-2 hover:bg-slate-700 rounded-lg transition-colors" aria-label="Menu">
+                                {menuOpen ? <IconX /> : <IconMenu />}
+                            </button>
+                            <SoftcomLogo />
+                        </div>
                         <div className="hidden md:block text-slate-400 text-xs font-bold uppercase tracking-widest">
-                            Suporte Técnico / NFS-e
+                            {view === 'migrate' ? 'Gerador Ticket Migrate' : 'Links Úteis'}
                         </div>
                     </header>
 
-                    <main className="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
-                        <div className="lg:col-span-7 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
-                            <div className="bg-slate-50 border-b p-4 flex items-center gap-2">
+                    {/* Menu Lateral */}
+                    <div className={`fixed inset-y-0 left-0 w-64 bg-[#2d3e50] shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-r border-slate-700 pt-24 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <nav className="p-4 flex flex-col gap-2">
+                            <button 
+                                onClick={() => changeView('migrate')}
+                                className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'migrate' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}
+                            >
                                 <IconFileText />
-                                <h2 className="font-bold text-slate-700">Preencher Informações</h2>
-                            </div>
-
-                            <div className="p-6 space-y-5">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Empresa</label>
-                                        <input
-                                            name="empresa"
-                                            value={formData.empresa}
-                                            onChange={handleInputChange}
-                                            placeholder="Nome do Cliente"
-                                            className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CNPJ</label>
-                                        <input
-                                            name="cnpj"
-                                            value={formData.cnpj}
-                                            onChange={handleInputChange}
-                                            placeholder="00.000.000/0001-00"
-                                            className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Cidade / UF</label>
-                                        <input
-                                            name="cidade"
-                                            value={formData.cidade}
-                                            onChange={handleInputChange}
-                                            placeholder="Ex: João Pessoa / PB"
-                                            className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ambiente</label>
-                                        <input
-                                            name="ambiente"
-                                            value={formData.ambiente}
-                                            onChange={handleInputChange}
-                                            placeholder="Ex: 3.0"
-                                            className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mensagem de Erro da Prefeitura</label>
-                                    <textarea
-                                        name="mensagemErro"
-                                        value={formData.mensagemErro}
-                                        onChange={handleInputChange}
-                                        rows="2"
-                                        placeholder="Cole o erro retornado aqui..."
-                                        className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white resize-none"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div className="md:col-span-1">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nº Ticket</label>
-                                        <input
-                                            name="ticketAberto"
-                                            value={formData.ticketAberto}
-                                            onChange={handleInputChange}
-                                            placeholder="Opcional"
-                                            className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-3">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ações Realizadas / Contexto</label>
-                                        <input
-                                            name="detalhes"
-                                            value={formData.detalhes}
-                                            onChange={handleInputChange}
-                                            placeholder="Ex: Foi realizado o ajuste na IM..."
-                                            className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-3 pt-4">
-                                    <button
-                                        onClick={generateTicket}
-                                        className="flex-1 bg-[#2d3e50] hover:bg-[#1e2936] text-white font-bold py-3 px-6 rounded shadow-md flex items-center justify-center gap-2 transition-all uppercase text-sm tracking-wider"
-                                    >
-                                        <IconSend />
-                                        Gerar Texto
-                                    </button>
-                                    <button
-                                        onClick={clearForm}
-                                        className="bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-3 px-6 rounded flex items-center justify-center transition-all border border-slate-300"
-                                        title="Limpar campos"
-                                    >
-                                        <IconRefresh />
-                                    </button>
-                                </div>
-                            </div>
+                                TICKET MIGRATE
+                            </button>
+                            <button 
+                                onClick={() => changeView('links')}
+                                className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'links' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}
+                            >
+                                <IconExternalLink />
+                                LINKS ÚTEIS
+                            </button>
+                        </nav>
+                        <div className="absolute bottom-4 left-4 text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                            v2.1 - Softcom Support
                         </div>
+                    </div>
 
-                        <div className="lg:col-span-5 flex flex-col gap-4">
-                            <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full">
-                                <div className="bg-[#2d3e50] p-4 flex justify-between items-center text-white">
-                                    <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                                        Resultado
-                                    </span>
-                                    {generatedText && (
-                                        <button
-                                            onClick={copyToClipboard}
-                                            className={`flex items-center gap-2 px-4 py-1.5 rounded text-xs font-bold transition-all shadow-sm ${copied ? 'bg-green-500 text-white' : 'bg-[#f59e0b] text-[#2d3e50] hover:bg-[#d97706]'}`}
+                    {/* Overlay */}
+                    {menuOpen && (
+                        <div className="fixed inset-0 bg-black/50 z-30 transition-opacity" onClick={toggleMenu}></div>
+                    )}
+
+                    {/* Conteúdo */}
+                    <main className="max-w-6xl mx-auto w-full p-4 md:p-8 flex-1">
+                        {view === 'migrate' ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
+                                <div className="lg:col-span-7 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
+                                    <div className="bg-slate-50 border-b p-4 flex items-center gap-2">
+                                        <IconFileText />
+                                        <h2 className="font-bold text-slate-700 uppercase text-sm tracking-tighter">Dados do Chamado</h2>
+                                    </div>
+                                    <div className="p-6 space-y-5">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Empresa</label>
+                                                <input name="empresa" value={formData.empresa} onChange={handleInputChange} placeholder="Ex: BARRA AUTO CENTER" className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CNPJ</label>
+                                                <input name="cnpj" value={formData.cnpj} onChange={handleInputChange} placeholder="00.000.000/0001-00" className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Cidade / UF</label>
+                                                <input name="cidade" value={formData.cidade} onChange={handleInputChange} placeholder="Ex: Natal / RN" className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ambiente</label>
+                                                <input name="ambiente" value={formData.ambiente} onChange={handleInputChange} placeholder="Ex: 3.0" className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mensagem de Erro</label>
+                                            <textarea name="mensagemErro" value={formData.mensagemErro} onChange={handleInputChange} rows="2" placeholder="Cole aqui a mensagem da prefeitura..." className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white resize-none" />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="md:col-span-1">
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ticket</label>
+                                                <input name="ticketAberto" value={formData.ticketAberto} onChange={handleInputChange} placeholder="Opcional" className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
+                                            </div>
+                                            <div className="md:col-span-3">
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Contexto Extra</label>
+                                                <input name="detalhes" value={formData.detalhes} onChange={handleInputChange} placeholder="Ex: Fizemos a troca de ambiente conforme solicitado..." className="w-full p-2.5 border border-slate-300 rounded focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] outline-none transition-all bg-white" />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 pt-4">
+                                            <button onClick={generateTicket} className="flex-1 bg-[#2d3e50] hover:bg-[#1e2936] text-white font-bold py-3 px-6 rounded shadow-md flex items-center justify-center gap-2 transition-all uppercase text-sm tracking-wider">
+                                                <IconSend /> Gerar Texto
+                                            </button>
+                                            <button onClick={clearForm} className="bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-3 px-6 rounded flex items-center justify-center transition-all border border-slate-300">
+                                                <IconRefresh />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="lg:col-span-5 flex flex-col gap-4">
+                                    <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full">
+                                        <div className="bg-[#2d3e50] p-4 flex justify-between items-center text-white">
+                                            <span className="text-xs font-bold uppercase tracking-widest">Texto Gerado</span>
+                                            {generatedText && (
+                                                <button onClick={copyToClipboard} className={`flex items-center gap-2 px-4 py-1.5 rounded text-xs font-bold transition-all shadow-sm ${copied ? 'bg-green-500 text-white' : 'bg-[#f59e0b] text-[#2d3e50] hover:bg-[#d97706]'}`}>
+                                                    {copied ? <IconCheck /> : <IconClipboard />} {copied ? 'COPIADO' : 'COPIAR'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="p-6 bg-slate-50 flex-1 min-h-[300px] font-mono text-sm text-slate-700 whitespace-pre-wrap select-all">
+                                            {generatedText || "Preencha os dados à esquerda e clique em gerar..."}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="animate-fadeIn max-w-2xl">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="bg-[#f59e0b] p-2 rounded-lg text-[#2d3e50]">
+                                        <IconExternalLink />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-slate-700 tracking-tight">Recursos Úteis</h2>
+                                </div>
+                                <div className="grid grid-cols-1 gap-6">
+                                    {linksUteis.map((link, idx) => (
+                                        <a 
+                                            key={idx} 
+                                            href={link.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="bg-white p-6 rounded-xl shadow-sm border-2 border-slate-200 hover:border-[#f59e0b] hover:shadow-lg transition-all group flex flex-col gap-2"
                                         >
-                                            {copied ? <IconCheck /> : <IconClipboard />}
-                                            {copied ? 'COPIADO' : 'COPIAR'}
-                                        </button>
-                                    )}
-                                </div>
-                                
-                                <div className="p-6 bg-slate-50 flex-1 min-h-[300px] font-mono text-sm text-slate-700 whitespace-pre-wrap leading-relaxed select-all">
-                                    {generatedText || "O texto gerado aparecerá aqui após preencher os dados..."}
+                                            <div className="flex justify-between items-center">
+                                                <h3 className="font-bold text-lg text-slate-800 group-hover:text-[#f59e0b] transition-colors uppercase tracking-tight">{link.title}</h3>
+                                                <span className="text-[#f59e0b]"><IconExternalLink /></span>
+                                            </div>
+                                            <p className="text-sm text-slate-500 leading-relaxed">{link.desc}</p>
+                                            <div className="mt-2 text-[10px] font-mono text-slate-400 truncate">{link.url}</div>
+                                        </a>
+                                    ))}
                                 </div>
                             </div>
-                            
-                            <div className="bg-amber-50 border-l-4 border-[#f59e0b] p-4 rounded-r-lg shadow-sm">
-                                <p className="text-xs text-amber-800 font-medium italic">
-                                    "Agilidade e precisão no suporte ao cliente Softcom."
-                                </p>
-                            </div>
-                        </div>
+                        )}
                     </main>
 
-                    <footer className="text-center p-8 text-slate-400 text-xs">
-                        Softcom Tecnologia &copy; {new Date().getFullYear()} - Sistema de Apoio ao Suporte
+                    <footer className="text-center p-8 text-slate-400 text-[10px] uppercase tracking-widest font-bold">
+                        Softcom Tecnologia &copy; {new Date().getFullYear()} - Suporte Técnico Especializado
                     </footer>
                 </div>
             );
