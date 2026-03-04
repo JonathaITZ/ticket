@@ -22,29 +22,47 @@
         .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
         .shake { animation: shake 0.5s ease-in-out; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        
+        /* Garantia de visibilidade */
+        #root { min-height: 100vh; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
     <div id="root">
-        <!-- Loader inicial para evitar tela branca enquanto o Babel processa -->
+        <!-- Loader de segurança -->
         <div class="min-h-screen flex items-center justify-center bg-[#2d3e50]">
             <div class="text-center">
                 <div class="w-12 h-12 border-4 border-t-[#f59e0b] border-slate-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-white font-bold italic">A carregar Assistente Softcom...</p>
+                <p class="text-white font-bold italic">A inicializar Assistente NFSe...</p>
             </div>
         </div>
     </div>
 
-    <script type="text/babel" data-type="module">
-        // Importações seguras do Firebase
+    <!-- data-presets="react" e data-type="module" para compatibilidade total -->
+    <script type="text/babel" data-presets="react" data-type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const { useState, useEffect, useMemo } = React;
 
-        // --- Ícones SVG ---
+        // --- Configurações Iniciais ---
+        let firebaseApp, auth, db;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'softcom-nfse-assistente';
+        
+        try {
+            const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (config) {
+                firebaseApp = initializeApp(config);
+                auth = getAuth(firebaseApp);
+                db = getFirestore(firebaseApp);
+            }
+        } catch (e) {
+            console.warn("Firebase offline mode");
+        }
+
+        // --- Componentes de Ícones ---
         const IconHelp = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
         const IconFileText = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>;
         const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
@@ -55,13 +73,13 @@
         const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
         const IconClipboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
 
-        const SoftcomLogo = ({ size = "35" }) => (
+        const SoftcomLogo = ({ size = "45" }) => (
             <div className="flex items-center gap-2">
-                <svg width={size} height={(size * 28)/35} viewBox="0 0 45 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width={size} height={(size * 35)/45} viewBox="0 0 45 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 8C4 6.89543 4.89543 6 6 6H16.5L19.5 9H39C40.1046 9 41 9.89543 41 11V13H4V8Z" fill="#EAB308" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
                     <path d="M2 12C2 10.8954 2.89543 10 4 10H41C42.1046 10 43 10.8954 43 12V28C43 29.1046 42.1046 30 41 30H4C2.89543 30 2 29.1046 2 28V12Z" fill="#FBCC14" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
                 </svg>
-                <span className="text-2xl font-black italic tracking-tighter text-white select-none softcom-italic" style={{ letterSpacing: '-0.08em' }}>
+                <span className="text-3xl font-black italic tracking-tighter text-white select-none softcom-italic" style={{ letterSpacing: '-0.08em' }}>
                     softcom
                 </span>
             </div>
@@ -71,9 +89,6 @@
             const [view, setView] = useState('analise');
             const [menuOpen, setMenuOpen] = useState(false);
             const [user, setUser] = useState(null);
-            const [db, setDb] = useState(null);
-            const [auth, setAuth] = useState(null);
-            const [isCloudActive, setIsCloudActive] = useState(false);
             
             // Fluxograma State
             const [currentStep, setCurrentStep] = useState('inicio');
@@ -93,65 +108,69 @@
             const [generatedText, setGeneratedText] = useState('');
             const [copyStatus, setCopyStatus] = useState({});
 
+            // Lógica do Fluxograma Mapeado (image_e4d074.png)
             const flowchart = {
                 inicio: {
                     question: "O cliente já emite NFS-e pelo sistema?",
                     options: [
-                        { label: "Sim", next: "tipo_cliente" },
-                        { label: "Não", next: "solicitar_xml_prefeitura" }
+                        { label: "Sim", next: "cliente_ambiente" },
+                        { label: "Não", next: "solicitar_arquivos" }
                     ]
                 },
-                solicitar_xml_prefeitura: {
+                solicitar_arquivos: {
                     instruction: "Peça ao cliente o XML de uma nota teste e o PDF emitido este ano na prefeitura.",
-                    question: "O cliente forneceu os arquivos?",
+                    question: "O cliente já forneceu os arquivos?",
                     options: [
                         { label: "Sim", next: "comparar_dados" },
-                        { label: "Não", next: "solicitar_xml_prefeitura" }
+                        { label: "Não", next: "solicitar_arquivos" }
                     ]
                 },
                 comparar_dados: {
-                    instruction: "Compare os dados da nota do sistema com a nota da prefeitura e deixe os dados do serviço iguais.",
-                    question: "O problema foi resolvido com o ajuste?",
+                    instruction: "Compare os dados da nota do sistema com a nota teste e deixe os dados dos serviços iguais.",
+                    question: "Deu certo?",
                     options: [
                         { label: "Sim", next: "fim_sucesso" },
-                        { label: "Não", next: "tipo_cliente" }
+                        { label: "Não", next: "cliente_ambiente" }
                     ]
                 },
-                tipo_cliente: {
-                    question: "O cliente utiliza Desktop ou Web?",
+                cliente_ambiente: {
+                    question: "O cliente é Desktop ou Web?",
                     options: [
                         { label: "Desktop", next: "subindo_migrate" },
                         { label: "Web", next: "subindo_migrate" }
                     ]
                 },
                 subindo_migrate: {
-                    question: "A nota está subindo para o monitor da Migrate?",
+                    question: "A nota está subindo para a Migrate?",
                     options: [
-                        { label: "Sim", next: "verificar_erro_migrate" },
+                        { label: "Sim", next: "verificar_erro_exibido" },
                         { label: "Não", next: "verificar_versao_emissor" }
                     ]
                 },
-                verificar_erro_migrate: {
-                    instruction: "Verifique o erro específico exibido no monitor da Migrate.",
-                    question: "Conseguiu resolver com base no erro exibido?",
+                verificar_erro_exibido: {
+                    instruction: "Verificar o erro que o sistema exibe no monitor.",
+                    question: "Deu certo?",
                     options: [
                         { label: "Sim", next: "fim_sucesso" },
                         { label: "Não", next: "abrir_ticket_migrate" }
                     ]
                 },
                 abrir_ticket_migrate: {
-                    instruction: "Abrir ticket com a Migrate relatando o erro e anexando logs/xml.",
+                    instruction: "Abrir ticket com a Migrate relatando o erro.",
                     isEnd: true,
                     type: "action",
-                    title: "Abertura de Chamado Migrate"
+                    title: "Abertura de Ticket"
                 },
                 verificar_versao_emissor: {
-                    instruction: "Verifique a versão do emissor de notas.",
-                    next: "refazer_pedido"
+                    instruction: "Verificar a versão do emissor de notas.",
+                    question: "Pronto?",
+                    options: [
+                        { label: "Próximo", next: "refazer_pedido" }
+                    ]
                 },
                 refazer_pedido: {
-                    instruction: "Refaça o pedido do zero no sistema e depois tente emitir a nota novamente.",
-                    question: "A nota foi emitida com sucesso?",
+                    instruction: "Refazer o pedido do zero e depois tentar emitir a nota novamente.",
+                    question: "Deu certo?",
                     options: [
                         { label: "Sim", next: "fim_sucesso" },
                         { label: "Não", next: "verificar_versao_910" }
@@ -160,74 +179,56 @@
                 verificar_versao_910: {
                     question: "A versão do sistema é inferior a 9.10?",
                     options: [
-                        { label: "Sim", next: "atualizador_versoes" },
-                        { label: "Não", next: "atualizador_objetos" }
+                        { label: "Sim", next: "passar_atualizador_versoes" },
+                        { label: "Não", next: "verificar_atualizador_objetos" }
                     ]
                 },
-                atualizador_versoes: {
-                    instruction: "Passar o atualizador de versões no sistema do cliente.",
+                passar_atualizador_versoes: {
+                    instruction: "Passar o atualizador de versões no cliente.",
                     isEnd: true,
                     type: "action",
-                    title: "Actualização de Versão"
+                    title: "Atualizador de Versões"
                 },
-                atualizador_objetos: {
+                verificar_atualizador_objetos: {
                     instruction: "Verificar se é necessário passar o atualizador de objetos.",
                     isEnd: true,
                     type: "action",
-                    title: "Actualização de Objetos"
+                    title: "Atualizador de Objetos"
                 },
                 fim_sucesso: {
-                    instruction: "Processo finalizado com sucesso!",
+                    instruction: "O problema foi resolvido com sucesso!",
                     isEnd: true,
                     type: "success",
-                    title: "Resolvido"
+                    title: "Sucesso"
                 }
             };
 
-            // Inicialização Robusta
             useEffect(() => {
-                const initFirebase = async () => {
+                if (!auth) return;
+                const initAuth = async () => {
                     try {
-                        const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-                        if (!config) return;
-
-                        const firebaseApp = initializeApp(config);
-                        const firebaseAuth = getAuth(firebaseApp);
-                        const firestore = getFirestore(firebaseApp);
-                        
-                        setAuth(firebaseAuth);
-                        setDb(firestore);
-                        setIsCloudActive(true);
-
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(firebaseAuth, __initial_auth_token);
+                            await signInWithCustomToken(auth, __initial_auth_token);
                         } else {
-                            await signInAnonymously(firebaseAuth);
+                            await signInAnonymously(auth);
                         }
-                        
-                        onAuthStateChanged(firebaseAuth, setUser);
-                    } catch (err) {
-                        console.warn("Firebase desativado (Ambiente Local/GitHub):", err.message);
-                    }
+                    } catch (err) { console.error(err); }
                 };
-                initFirebase();
+                initAuth();
+                const unsubscribe = onAuthStateChanged(auth, setUser);
+                return () => unsubscribe();
             }, []);
 
-            // Carregar Credenciais da Nuvem (Se disponível)
             useEffect(() => {
                 if (!user || !db) return;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'softcom-nfse-assistente';
                 const credRef = collection(db, 'artifacts', appId, 'public', 'data', 'credentials');
-                
                 const unsubscribe = onSnapshot(credRef, (snapshot) => {
                     if (!snapshot.empty) {
-                        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        setCredenciais(data.sort((a,b) => (a.order || 0) - (b.order || 0)));
+                        setCredenciais(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => (a.order || 0) - (b.order || 0)));
                     }
-                }, (err) => console.warn("Erro ao ler credenciais da nuvem:", err));
-
+                });
                 return () => unsubscribe();
-            }, [user, db]);
+            }, [user]);
 
             const handleFlowOption = (next) => {
                 setFlowHistory([...flowHistory, currentStep]);
@@ -270,9 +271,8 @@
                 
                 if (user && db) {
                     try {
-                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'softcom-nfse-assistente';
                         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tickets'), { ...formData, generatedText: text, createdAt: Date.now() });
-                    } catch (e) { console.error("Erro ao salvar ticket:", e); }
+                    } catch (e) {}
                 }
             };
 
@@ -289,6 +289,7 @@
 
             return (
                 <div className="min-h-screen flex flex-col bg-slate-100 font-sans">
+                    {/* Header Estilo Softcom */}
                     <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] z-50">
                         <div className="flex items-center gap-4">
                             <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
@@ -296,11 +297,8 @@
                             </button>
                             <SoftcomLogo />
                         </div>
-                        <div className="hidden md:flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isCloudActive ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`}></div>
-                            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                                {isCloudActive ? 'Cloud Sync Active' : 'Offline Mode'}
-                            </span>
+                        <div className="hidden md:block text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                            Suporte Técnico Especializado
                         </div>
                     </header>
 
@@ -325,53 +323,44 @@
 
                     {menuOpen && <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setMenuOpen(false)}></div>}
 
-                    <main className="max-w-6xl mx-auto w-full p-4 md:p-8 flex-1">
+                    <main className="max-w-6xl mx-auto w-full p-4 md:p-8 flex-1 flex flex-col items-center">
                         
-                        {/* VIEW: ASSISTENTE NFSE */}
+                        {/* VIEW: ASSISTENTE NFSE (FLUXOGRAMA) */}
                         {view === 'analise' && (
-                            <div className="animate-fadeIn max-w-3xl mx-auto space-y-8">
-                                <div className="text-center space-y-2">
-                                    <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Assistente NFSe</h1>
-                                    <p className="text-slate-500 font-medium italic">Diagnóstico guiado para suporte técnico.</p>
+                            <div className="animate-fadeIn max-w-2xl w-full space-y-8">
+                                <div className="text-center">
+                                    <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter uppercase mb-1">Assistente NFSe</h1>
+                                    <p className="text-slate-500 font-medium">Fluxo Inteligente de Suporte</p>
                                 </div>
 
-                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[450px] flex flex-col">
-                                    <div className="h-2 bg-slate-100 w-full"><div className="h-full bg-[#f59e0b] transition-all" style={{ width: `${(flowHistory.length / 7) * 100}%` }}></div></div>
+                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[400px] flex flex-col">
+                                    <div className="h-2 bg-slate-100 w-full"><div className="h-full bg-[#f59e0b] transition-all" style={{ width: `${(flowHistory.length / 8) * 100}%` }}></div></div>
 
                                     <div className="p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center">
                                         {flowchart[currentStep].instruction && (
                                             <div className="bg-amber-50 border-l-4 border-[#f59e0b] p-6 rounded-r-xl w-full mb-8 text-left animate-fadeIn">
-                                                <h3 className="text-amber-800 font-black uppercase text-xs mb-1 tracking-widest italic">Instrução:</h3>
+                                                <h3 className="text-amber-800 font-black uppercase text-xs mb-1 tracking-widest italic">Ação Necessária:</h3>
                                                 <p className="text-slate-700 text-lg font-bold leading-tight">{flowchart[currentStep].instruction}</p>
                                             </div>
                                         )}
 
                                         {!flowchart[currentStep].isEnd ? (
                                             <div className="space-y-8 w-full animate-fadeIn">
-                                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 leading-tight italic tracking-tighter uppercase">
+                                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 italic tracking-tighter uppercase leading-tight">
                                                     {flowchart[currentStep].question}
                                                 </h2>
                                                 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                    {flowchart[currentStep].options ? (
-                                                        flowchart[currentStep].options.map((opt, i) => (
-                                                            <button 
-                                                                key={i}
-                                                                onClick={() => handleFlowOption(opt.next)}
-                                                                className="group flex items-center justify-between p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl hover:border-[#f59e0b] hover:bg-amber-50 transition-all text-left"
-                                                            >
-                                                                <span className="text-lg font-bold text-[#2d3e50] group-hover:text-amber-900">{opt.label}</span>
-                                                                <IconArrowRight />
-                                                            </button>
-                                                        ))
-                                                    ) : (
+                                                    {flowchart[currentStep].options.map((opt, i) => (
                                                         <button 
-                                                            onClick={() => handleFlowOption(flowchart[currentStep].next)}
-                                                            className="col-span-2 flex items-center justify-center gap-3 p-6 bg-[#2d3e50] text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg"
+                                                            key={i}
+                                                            onClick={() => handleFlowOption(opt.next)}
+                                                            className="group flex items-center justify-between p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl hover:border-[#f59e0b] hover:bg-amber-50 transition-all text-left"
                                                         >
-                                                            PRÓXIMA ETAPA <IconArrowRight />
+                                                            <span className="text-lg font-bold text-[#2d3e50] group-hover:text-amber-900">{opt.label}</span>
+                                                            <IconArrowRight />
                                                         </button>
-                                                    )}
+                                                    ))}
                                                 </div>
                                             </div>
                                         ) : (
@@ -381,7 +370,7 @@
                                                 </div>
                                                 <div className="space-y-2">
                                                     <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">{flowchart[currentStep].title}</h2>
-                                                    <p className="text-slate-500 font-medium max-w-sm">Recomendação finalizada com sucesso.</p>
+                                                    <p className="text-slate-500 font-medium max-w-sm">Fluxo finalizado.</p>
                                                 </div>
                                                 <button onClick={resetFlow} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-full font-bold hover:bg-slate-200 transition-all uppercase tracking-widest text-xs">Novo Diagnóstico</button>
                                             </div>
@@ -398,8 +387,8 @@
 
                         {/* VIEW: TICKET MIGRATE */}
                         {view === 'migrate' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
-                                <div className="lg:col-span-7 bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-6 h-fit">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn w-full max-w-6xl">
+                                <div className="lg:col-span-7 bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-6">
                                     <div className="flex items-center gap-2 mb-2"><IconFileText /><h2 className="font-black text-slate-700 uppercase italic tracking-tighter text-xl underline decoration-[#f59e0b] decoration-4">Gerador de Ticket</h2></div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <input name="empresa" value={formData.empresa} onChange={handleInputChange} placeholder="Empresa" className="p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b] w-full" />
@@ -425,7 +414,7 @@
 
                         {/* VIEW: LINKS ÚTEIS */}
                         {view === 'links' && (
-                            <div className="animate-fadeIn grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="animate-fadeIn grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
                                 {[
                                     { title: "Dashboard Migrate", url: "https://painel-dfe-production-382497636524.us-central1.run.app/", desc: "Status dos serviços NFS-e." },
                                     { title: "Atendimento Migrate", url: "https://atendimento.migrate.com.br/", desc: "Chamados oficiais Migrate." },
@@ -488,8 +477,12 @@
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        } catch (e) {
+            console.error("Erro ao renderizar:", e);
+        }
     </script>
 </body>
 </html>
