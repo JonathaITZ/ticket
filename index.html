@@ -26,36 +26,23 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
-    <div id="root"></div>
+    <div id="root">
+        <!-- Loader inicial para evitar tela branca enquanto o Babel processa -->
+        <div class="min-h-screen flex items-center justify-center bg-[#2d3e50]">
+            <div class="text-center">
+                <div class="w-12 h-12 border-4 border-t-[#f59e0b] border-slate-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-white font-bold italic">A carregar Assistente Softcom...</p>
+            </div>
+        </div>
+    </div>
 
     <script type="text/babel" data-type="module">
+        // Importações seguras do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const { useState, useEffect } = React;
-
-        // Proteção contra variáveis de ambiente ausentes
-        let firebaseApp, auth, db;
-        let configError = null;
-
-        try {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' 
-                ? JSON.parse(__firebase_config) 
-                : null;
-
-            if (firebaseConfig) {
-                firebaseApp = initializeApp(firebaseConfig);
-                auth = getAuth(firebaseApp);
-                db = getFirestore(firebaseApp);
-            } else {
-                configError = "Configuração do Firebase não encontrada.";
-            }
-        } catch (e) {
-            configError = "Erro ao inicializar o Firebase: " + e.message;
-        }
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'softcom-nfse-assistente';
+        const { useState, useEffect, useMemo } = React;
 
         // --- Ícones SVG ---
         const IconHelp = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
@@ -84,6 +71,9 @@
             const [view, setView] = useState('analise');
             const [menuOpen, setMenuOpen] = useState(false);
             const [user, setUser] = useState(null);
+            const [db, setDb] = useState(null);
+            const [auth, setAuth] = useState(null);
+            const [isCloudActive, setIsCloudActive] = useState(false);
             
             // Fluxograma State
             const [currentStep, setCurrentStep] = useState('inicio');
@@ -93,7 +83,10 @@
             const [isEspecialistaAuthed, setIsEspecialistaAuthed] = useState(false);
             const [pinInput, setPinInput] = useState('');
             const [pinError, setPinError] = useState(false);
-            const [credenciais, setCredenciais] = useState([]);
+            const [credenciais, setCredenciais] = useState([
+                { plataforma: "Migrate", login: "suporte.nfse.softcom@gmail.com", senha: "Sfc@3321", color: "border-blue-500", order: 1 },
+                { plataforma: "Invoicy", login: "renato.rodrigues@softcomtecnologia.com.br", senha: "Softcom12", color: "border-emerald-500", order: 2 }
+            ]);
             
             // Ticket State
             const [formData, setFormData] = useState({ empresa: '', cnpj: '', cidade: '', mensagemErro: '', detalhes: '', ticketAberto: '', ambiente: '' });
@@ -191,51 +184,50 @@
                 }
             };
 
+            // Inicialização Robusta
             useEffect(() => {
-                if (!auth) return;
-                const initAuth = async () => {
+                const initFirebase = async () => {
                     try {
+                        const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                        if (!config) return;
+
+                        const firebaseApp = initializeApp(config);
+                        const firebaseAuth = getAuth(firebaseApp);
+                        const firestore = getFirestore(firebaseApp);
+                        
+                        setAuth(firebaseAuth);
+                        setDb(firestore);
+                        setIsCloudActive(true);
+
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
+                            await signInWithCustomToken(firebaseAuth, __initial_auth_token);
                         } else {
-                            await signInAnonymously(auth);
+                            await signInAnonymously(firebaseAuth);
                         }
+                        
+                        onAuthStateChanged(firebaseAuth, setUser);
                     } catch (err) {
-                        console.error("Auth error:", err);
+                        console.warn("Firebase desativado (Ambiente Local/GitHub):", err.message);
                     }
                 };
-                initAuth();
-                const unsubscribe = onAuthStateChanged(auth, setUser);
-                return () => unsubscribe();
+                initFirebase();
             }, []);
 
+            // Carregar Credenciais da Nuvem (Se disponível)
             useEffect(() => {
-                if (!user || !db) {
-                    // Se não houver base de dados, carrega apenas as credenciais locais
-                    setCredenciais([
-                        { plataforma: "Migrate", login: "suporte.nfse.softcom@gmail.com", senha: "Sfc@3321", color: "border-blue-500", order: 1 },
-                        { plataforma: "Invoicy", login: "renato.rodrigues@softcomtecnologia.com.br", senha: "Softcom12", color: "border-emerald-500", order: 2 }
-                    ]);
-                    return;
-                }
-
+                if (!user || !db) return;
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'softcom-nfse-assistente';
                 const credRef = collection(db, 'artifacts', appId, 'public', 'data', 'credentials');
-                const unsubscribeCreds = onSnapshot(credRef, (snapshot) => {
-                    if (!snapshot.empty) setCredenciais(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                    else initDefaultCredentials();
-                }, (err) => console.error(err));
+                
+                const unsubscribe = onSnapshot(credRef, (snapshot) => {
+                    if (!snapshot.empty) {
+                        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        setCredenciais(data.sort((a,b) => (a.order || 0) - (b.order || 0)));
+                    }
+                }, (err) => console.warn("Erro ao ler credenciais da nuvem:", err));
 
-                return () => unsubscribeCreds();
-            }, [user]);
-
-            const initDefaultCredentials = async () => {
-                if (!db) return;
-                const creds = [
-                    { plataforma: "Migrate", login: "suporte.nfse.softcom@gmail.com", senha: "Sfc@3321", color: "border-blue-500", order: 1 },
-                    { plataforma: "Invoicy", login: "renato.rodrigues@softcomtecnologia.com.br", senha: "Softcom12", color: "border-emerald-500", order: 2 }
-                ];
-                for (const c of creds) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'credentials'), c);
-            };
+                return () => unsubscribe();
+            }, [user, db]);
 
             const handleFlowOption = (next) => {
                 setFlowHistory([...flowHistory, currentStep]);
@@ -275,7 +267,13 @@
                 const saudacao = hora < 12 ? 'Bom dia' : 'Boa tarde';
                 const text = `Assunto: ${formData.empresa}\n\n${saudacao},\n\nEmpresa: ${formData.empresa}\nCNPJ: ${formData.cnpj}\nMunicípio: ${formData.cidade}\n\nErro: ${formData.mensagemErro}\nAmbiente: ${formData.ambiente}\n\n${formData.detalhes}`;
                 setGeneratedText(text);
-                if (user && db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tickets'), { ...formData, generatedText: text, createdAt: Date.now() });
+                
+                if (user && db) {
+                    try {
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'softcom-nfse-assistente';
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tickets'), { ...formData, generatedText: text, createdAt: Date.now() });
+                    } catch (e) { console.error("Erro ao salvar ticket:", e); }
+                }
             };
 
             const copyToClipboard = (text, key) => {
@@ -289,21 +287,6 @@
                 setTimeout(() => setCopyStatus(prev => ({ ...prev, [key]: false })), 2000);
             };
 
-            if (configError && !db) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-                        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
-                            <div className="text-red-500 mb-4 flex justify-center">
-                                <IconX />
-                            </div>
-                            <h1 className="text-xl font-bold mb-2">Erro de Inicialização</h1>
-                            <p className="text-slate-500 mb-6">{configError}</p>
-                            <p className="text-xs text-slate-400">Certifique-se de que o ambiente do Canvas está configurado ou tente recarregar a página.</p>
-                        </div>
-                    </div>
-                );
-            }
-
             return (
                 <div className="min-h-screen flex flex-col bg-slate-100 font-sans">
                     <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] z-50">
@@ -313,8 +296,11 @@
                             </button>
                             <SoftcomLogo />
                         </div>
-                        <div className="hidden md:block text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                            {view === 'analise' ? 'Assistente NFSe' : view.toUpperCase()}
+                        <div className="hidden md:flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${isCloudActive ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`}></div>
+                            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                                {isCloudActive ? 'Cloud Sync Active' : 'Offline Mode'}
+                            </span>
                         </div>
                     </header>
 
@@ -402,9 +388,9 @@
                                         )}
                                     </div>
 
-                                    <div className="bg-slate-50 p-4 border-t flex justify-between px-8">
-                                        <button onClick={goBackFlow} disabled={flowHistory.length === 0} className="text-slate-400 font-bold text-xs uppercase tracking-widest disabled:opacity-0 hover:text-slate-600 transition-colors">← Voltar</button>
-                                        <button onClick={resetFlow} className="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-red-500 transition-colors">Reiniciar</button>
+                                    <div className="bg-slate-50 p-4 border-t flex justify-between px-8 text-xs font-bold uppercase tracking-widest">
+                                        <button onClick={goBackFlow} disabled={flowHistory.length === 0} className="text-slate-400 disabled:opacity-0 hover:text-slate-600 transition-colors">← Voltar</button>
+                                        <button onClick={resetFlow} className="text-slate-400 hover:text-red-500 transition-colors">Reiniciar</button>
                                     </div>
                                 </div>
                             </div>
