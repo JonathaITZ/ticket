@@ -104,106 +104,109 @@
                 inicio: {
                     question: "O cliente já emite NFS-e pelo sistema?",
                     options: [
-                        { label: "Sim", next: "cliente_ambiente" },
-                        { label: "Não", next: "solicitar_arquivos" }
+                        { label: "Sim", next: "cliente_desktop_web" },
+                        { label: "Não", next: "solicitar_xml_pdf" }
                     ]
                 },
-                solicitar_arquivos: {
+                solicitar_xml_pdf: {
                     instruction: "Peça ao cliente o XML de uma nota teste e o PDF emitido este ano na prefeitura.",
-                    question: "O cliente já forneceu os arquivos?",
+                    question: "Arquivos recebidos?",
                     options: [
                         { label: "Sim", next: "comparar_dados" },
-                        { label: "Não", next: "solicitar_arquivos" }
+                        { label: "Não", next: "solicitar_xml_pdf" }
                     ]
                 },
                 comparar_dados: {
-                    instruction: "Compare os dados da nota do sistema com a nota teste e deixe os dados dos serviços iguais.",
-                    question: "Deu certo?",
+                    instruction: "Compare os dados da nota do sistema com a nota teste e deixe os dados do serviço iguais.",
+                    question: "O ajuste resolveu o problema?",
                     options: [
                         { label: "Sim", next: "fim_sucesso" },
-                        { label: "Não", next: "cliente_ambiente" }
+                        { label: "Não", next: "cliente_desktop_web" }
                     ]
                 },
-                cliente_ambiente: {
-                    question: "O cliente é Desktop ou Web?",
+                cliente_desktop_web: {
+                    question: "Qual o ambiente do cliente?",
                     options: [
                         { label: "Desktop", next: "subindo_migrate" },
                         { label: "Web", next: "subindo_migrate" }
                     ]
                 },
                 subindo_migrate: {
-                    question: "A nota está subindo para a Migrate?",
+                    question: "A nota está a subir para o monitor da Migrate?",
                     options: [
-                        { label: "Sim", next: "verificar_erro_exibido" },
+                        { label: "Sim", next: "foi_autorizada" },
                         { label: "Não", next: "verificar_versao_emissor" }
                     ]
                 },
-                verificar_erro_exibido: {
-                    instruction: "Verificar o erro que exibe (podes usar o GPT ou o Google caso o erro esteja bem informado na Migrate).",
-                    question: "Resolveu o problema?",
+                foi_autorizada: {
+                    question: "A nota foi autorizada na prefeitura?",
+                    options: [
+                        { label: "Sim", next: "fim_sucesso" },
+                        { label: "Não (Rejeitada)", next: "verificar_erro_exibe" }
+                    ]
+                },
+                verificar_erro_exibe: {
+                    instruction: "Analise o erro exibido no monitor da Migrate. Utilize o GPT ou Google para interpretar o erro detalhadamente se necessário.",
+                    question: "Conseguiu resolver com o ajuste técnico?",
                     options: [
                         { label: "Sim", next: "fim_sucesso" },
                         { label: "Não", next: "abrir_ticket_migrate" }
                     ]
                 },
                 abrir_ticket_migrate: {
-                    instruction: "Abrir ticket com a Migrate relatando o erro.",
+                    instruction: "Abra um ticket com a Migrate relatando o incidente e anexe as evidências (XML e erro).",
                     isEnd: true,
                     type: "action",
-                    title: "Abertura de Ticket"
+                    title: "Fim - Abrir Ticket"
                 },
                 verificar_versao_emissor: {
-                    instruction: "Verificar a versão do emissor de notas.",
-                    question: "Pronto?",
+                    instruction: "Verifique a versão do emissor de notas e valide se está atualizado.",
+                    question: "Versão verificada?",
                     options: [
-                        { label: "Próximo", next: "refazer_pedido" }
+                        { label: "Sim, Próximo", next: "refazer_pedido_zero" }
                     ]
                 },
-                refazer_pedido: {
-                    instruction: "Refazer o pedido do zero e depois tentar emitir a nota novamente.",
-                    question: "Deu certo?",
+                refazer_pedido_zero: {
+                    instruction: "Refaça o pedido do zero no sistema e tente emitir a nota novamente.",
+                    question: "Resolveu o problema?",
                     options: [
                         { label: "Sim", next: "fim_sucesso" },
-                        { label: "Não", next: "verificar_versao_910" }
+                        { label: "Não", next: "versao_inferior_910" }
                     ]
                 },
-                verificar_versao_910: {
+                versao_inferior_910: {
                     question: "A versão do sistema é inferior a 9.10?",
                     options: [
-                        { label: "Sim", next: "passar_atualizador_versoes" },
+                        { label: "Sim", next: "passar_atualizador" },
                         { label: "Não", next: "reconfigurar_emissor_zero" }
                     ]
                 },
-                passar_atualizador_versoes: {
-                    instruction: "Passar o atualizador de versões no cliente.",
+                passar_atualizador: {
+                    instruction: "Execute o atualizador de versões no sistema do cliente.",
                     isEnd: true,
                     type: "action",
-                    title: "Atualizador de Versões"
+                    title: "Fim - Atualizar Versões"
                 },
                 reconfigurar_emissor_zero: {
-                    instruction: "Reconfigurar o emissor NFSe do zero.",
-                    next: "apagar_tabela_config"
-                },
-                apagar_tabela_config: {
-                    instruction: "Na tabela 'softcom_modulo_configurações', apagar os dados NFSe e depois reconfigurar tudo novamente e testar.",
-                    question: "A nota subiu para a Migrate?",
+                    instruction: "Reconfigure as definições do emissor NFSe do zero.",
+                    question: "Reconfigurado?",
                     options: [
-                        { label: "Sim", next: "verificar_autorizacao" },
-                        { label: "Não", next: "abrir_ticket_migrate" }
+                        { label: "Sim, Próximo", next: "limpar_tabela_config" }
                     ]
                 },
-                verificar_autorizacao: {
-                    question: "Foi autorizada?",
+                limpar_tabela_config: {
+                    instruction: "Na tabela 'softcom_modulo_configurações', apague os dados da NFSe. Reconfigure e teste a emissão novamente.",
+                    question: "A nota subiu agora para a Migrate?",
                     options: [
-                        { label: "Sim", next: "fim_sucesso" },
+                        { label: "Sim", next: "foi_autorizada" },
                         { label: "Não", next: "abrir_ticket_migrate" }
                     ]
                 },
                 fim_sucesso: {
-                    instruction: "O problema foi resolvido com sucesso!",
+                    instruction: "Excelente trabalho! O problema foi resolvido.",
                     isEnd: true,
                     type: "success",
-                    title: "Sucesso"
+                    title: "Fim - Resolvido"
                 }
             };
 
@@ -329,17 +332,19 @@
                         {view === 'analise' && (
                             <div className="animate-fadeIn max-w-2xl w-full space-y-8">
                                 <div className="text-center">
-                                    <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter uppercase mb-1">Assistente NFSe</h1>
-                                    <p className="text-slate-500 font-medium">Fluxo Inteligente de Suporte</p>
+                                    <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter uppercase mb-1 leading-none">Assistente NFSe</h1>
+                                    <p className="text-slate-500 font-medium italic tracking-tight uppercase text-[10px]">Fluxo de Diagnóstico Técnico</p>
                                 </div>
 
-                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[400px] flex flex-col">
-                                    <div className="h-2 bg-slate-100 w-full"><div className="h-full bg-[#f59e0b] transition-all" style={{ width: `${(flowHistory.length / 10) * 100}%` }}></div></div>
+                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[420px] flex flex-col">
+                                    <div className="h-2 bg-slate-100 w-full">
+                                        <div className="h-full bg-[#f59e0b] transition-all duration-500" style={{ width: `${(flowHistory.length / 12) * 100}%` }}></div>
+                                    </div>
 
                                     <div className="p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center">
                                         {flowchart[currentStep].instruction && (
                                             <div className="bg-amber-50 border-l-4 border-[#f59e0b] p-6 rounded-r-xl w-full mb-8 text-left animate-fadeIn">
-                                                <h3 className="text-amber-800 font-black uppercase text-xs mb-1 tracking-widest italic">Ação Necessária:</h3>
+                                                <h3 className="text-amber-800 font-black uppercase text-[10px] mb-1 tracking-widest italic leading-none">Ação Requerida:</h3>
                                                 <p className="text-slate-700 text-lg font-bold leading-tight">{flowchart[currentStep].instruction}</p>
                                             </div>
                                         )}
@@ -358,8 +363,10 @@
                                                                 onClick={() => handleFlowOption(opt.next)}
                                                                 className="group flex items-center justify-between p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl hover:border-[#f59e0b] hover:bg-amber-50 transition-all text-left"
                                                             >
-                                                                <span className="text-lg font-bold text-[#2d3e50] group-hover:text-amber-900">{opt.label}</span>
-                                                                <IconArrowRight />
+                                                                <span className="text-lg font-bold text-[#2d3e50] group-hover:text-amber-900 leading-tight">{opt.label}</span>
+                                                                <div className="bg-white p-2 rounded-full shadow-sm group-hover:bg-[#f59e0b] transition-colors">
+                                                                    <IconArrowRight />
+                                                                </div>
                                                             </button>
                                                         ))
                                                     ) : (
@@ -378,17 +385,17 @@
                                                     {flowchart[currentStep].type === 'success' ? <IconCheck /> : <IconShield />}
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">{flowchart[currentStep].title}</h2>
-                                                    <p className="text-slate-500 font-medium max-w-sm">Fluxo finalizado.</p>
+                                                    <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">{flowchart[currentStep].title}</h2>
+                                                    <p className="text-slate-500 font-medium max-w-sm">O fluxo de suporte Softcom foi concluído.</p>
                                                 </div>
-                                                <button onClick={resetFlow} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-full font-bold hover:bg-slate-200 transition-all uppercase tracking-widest text-xs">Novo Diagnóstico</button>
+                                                <button onClick={resetFlow} className="bg-slate-100 text-slate-500 px-10 py-4 rounded-full font-black hover:bg-slate-200 transition-all uppercase tracking-widest text-[10px]">Novo Diagnóstico</button>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="bg-slate-50 p-4 border-t flex justify-between px-8 text-xs font-bold uppercase tracking-widest">
-                                        <button onClick={goBackFlow} disabled={flowHistory.length === 0} className="text-slate-400 disabled:opacity-0 hover:text-slate-600 transition-colors">← Voltar</button>
-                                        <button onClick={resetFlow} className="text-slate-400 hover:text-red-500 transition-colors">Reiniciar</button>
+                                    <div className="bg-slate-50 p-4 border-t flex justify-between px-8 text-[10px] font-black uppercase tracking-widest">
+                                        <button onClick={goBackFlow} disabled={flowHistory.length === 0} className="text-slate-400 disabled:opacity-0 hover:text-slate-600 transition-colors flex items-center gap-1">← Voltar</button>
+                                        <button onClick={resetFlow} className="text-slate-400 hover:text-red-500 transition-colors">Reiniciar Fluxo</button>
                                     </div>
                                 </div>
                             </div>
@@ -477,7 +484,7 @@
                     </main>
 
                     <footer className="text-center p-8 text-slate-400 text-[10px] uppercase tracking-widest font-black italic">
-                        Softcom Tecnologia &copy; {new Date().getFullYear()} - Assistente Técnico
+                        Softcom Tecnologia &copy; {new Date().getFullYear()} - Apoio Técnico
                     </footer>
                 </div>
             );
@@ -487,7 +494,7 @@
             const root = ReactDOM.createRoot(document.getElementById('root'));
             root.render(<App />);
         } catch (e) {
-            console.error("Erro ao renderizar:", e);
+            console.error("Render error:", e);
         }
     </script>
 </body>
