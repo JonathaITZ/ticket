@@ -28,7 +28,6 @@
 
     <div id="root"></div>
 
-    <!-- Note: data-type="module" is required for Babel to handle ES imports correctly in the browser -->
     <script type="text/babel" data-type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -36,10 +35,26 @@
 
         const { useState, useEffect } = React;
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Proteção contra variáveis de ambiente ausentes
+        let firebaseApp, auth, db;
+        let configError = null;
+
+        try {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' 
+                ? JSON.parse(__firebase_config) 
+                : null;
+
+            if (firebaseConfig) {
+                firebaseApp = initializeApp(firebaseConfig);
+                auth = getAuth(firebaseApp);
+                db = getFirestore(firebaseApp);
+            } else {
+                configError = "Configuração do Firebase não encontrada.";
+            }
+        } catch (e) {
+            configError = "Erro ao inicializar o Firebase: " + e.message;
+        }
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'softcom-nfse-assistente';
 
         // --- Ícones SVG ---
@@ -83,7 +98,6 @@
             // Ticket State
             const [formData, setFormData] = useState({ empresa: '', cnpj: '', cidade: '', mensagemErro: '', detalhes: '', ticketAberto: '', ambiente: '' });
             const [generatedText, setGeneratedText] = useState('');
-            const [ticketHistory, setTicketHistory] = useState([]);
             const [copyStatus, setCopyStatus] = useState({});
 
             const flowchart = {
@@ -178,6 +192,7 @@
             };
 
             useEffect(() => {
+                if (!auth) return;
                 const initAuth = async () => {
                     try {
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -195,12 +210,14 @@
             }, []);
 
             useEffect(() => {
-                if (!user) return;
-                const ticketsRef = collection(db, 'artifacts', appId, 'public', 'data', 'tickets');
-                const unsubscribeTickets = onSnapshot(ticketsRef, (snapshot) => {
-                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setTicketHistory(data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
-                }, (err) => console.error(err));
+                if (!user || !db) {
+                    // Se não houver base de dados, carrega apenas as credenciais locais
+                    setCredenciais([
+                        { plataforma: "Migrate", login: "suporte.nfse.softcom@gmail.com", senha: "Sfc@3321", color: "border-blue-500", order: 1 },
+                        { plataforma: "Invoicy", login: "renato.rodrigues@softcomtecnologia.com.br", senha: "Softcom12", color: "border-emerald-500", order: 2 }
+                    ]);
+                    return;
+                }
 
                 const credRef = collection(db, 'artifacts', appId, 'public', 'data', 'credentials');
                 const unsubscribeCreds = onSnapshot(credRef, (snapshot) => {
@@ -208,10 +225,11 @@
                     else initDefaultCredentials();
                 }, (err) => console.error(err));
 
-                return () => { unsubscribeTickets(); unsubscribeCreds(); };
+                return () => unsubscribeCreds();
             }, [user]);
 
             const initDefaultCredentials = async () => {
+                if (!db) return;
                 const creds = [
                     { plataforma: "Migrate", login: "suporte.nfse.softcom@gmail.com", senha: "Sfc@3321", color: "border-blue-500", order: 1 },
                     { plataforma: "Invoicy", login: "renato.rodrigues@softcomtecnologia.com.br", senha: "Softcom12", color: "border-emerald-500", order: 2 }
@@ -257,7 +275,7 @@
                 const saudacao = hora < 12 ? 'Bom dia' : 'Boa tarde';
                 const text = `Assunto: ${formData.empresa}\n\n${saudacao},\n\nEmpresa: ${formData.empresa}\nCNPJ: ${formData.cnpj}\nMunicípio: ${formData.cidade}\n\nErro: ${formData.mensagemErro}\nAmbiente: ${formData.ambiente}\n\n${formData.detalhes}`;
                 setGeneratedText(text);
-                if (user) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tickets'), { ...formData, generatedText: text, createdAt: Date.now() });
+                if (user && db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tickets'), { ...formData, generatedText: text, createdAt: Date.now() });
             };
 
             const copyToClipboard = (text, key) => {
@@ -271,8 +289,23 @@
                 setTimeout(() => setCopyStatus(prev => ({ ...prev, [key]: false })), 2000);
             };
 
+            if (configError && !db) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+                        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+                            <div className="text-red-500 mb-4 flex justify-center">
+                                <IconX />
+                            </div>
+                            <h1 className="text-xl font-bold mb-2">Erro de Inicialização</h1>
+                            <p className="text-slate-500 mb-6">{configError}</p>
+                            <p className="text-xs text-slate-400">Certifique-se de que o ambiente do Canvas está configurado ou tente recarregar a página.</p>
+                        </div>
+                    </div>
+                );
+            }
+
             return (
-                <div className="min-h-screen flex flex-col bg-slate-100">
+                <div className="min-h-screen flex flex-col bg-slate-100 font-sans">
                     <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] z-50">
                         <div className="flex items-center gap-4">
                             <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
@@ -312,8 +345,8 @@
                         {view === 'analise' && (
                             <div className="animate-fadeIn max-w-3xl mx-auto space-y-8">
                                 <div className="text-center space-y-2">
-                                    <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter uppercase">Assistente NFSe</h1>
-                                    <p className="text-slate-500 font-medium italic">Siga o fluxograma de suporte para diagnóstico rápido.</p>
+                                    <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Assistente NFSe</h1>
+                                    <p className="text-slate-500 font-medium italic">Diagnóstico guiado para suporte técnico.</p>
                                 </div>
 
                                 <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[450px] flex flex-col">
@@ -322,7 +355,7 @@
                                     <div className="p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center">
                                         {flowchart[currentStep].instruction && (
                                             <div className="bg-amber-50 border-l-4 border-[#f59e0b] p-6 rounded-r-xl w-full mb-8 text-left animate-fadeIn">
-                                                <h3 className="text-amber-800 font-black uppercase text-xs mb-1 tracking-widest italic">Ação Necessária:</h3>
+                                                <h3 className="text-amber-800 font-black uppercase text-xs mb-1 tracking-widest italic">Instrução:</h3>
                                                 <p className="text-slate-700 text-lg font-bold leading-tight">{flowchart[currentStep].instruction}</p>
                                             </div>
                                         )}
@@ -362,7 +395,7 @@
                                                 </div>
                                                 <div className="space-y-2">
                                                     <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">{flowchart[currentStep].title}</h2>
-                                                    <p className="text-slate-500 font-medium max-w-sm">Recomendação técnica baseada no fluxograma da Softcom.</p>
+                                                    <p className="text-slate-500 font-medium max-w-sm">Recomendação finalizada com sucesso.</p>
                                                 </div>
                                                 <button onClick={resetFlow} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-full font-bold hover:bg-slate-200 transition-all uppercase tracking-widest text-xs">Novo Diagnóstico</button>
                                             </div>
@@ -380,24 +413,26 @@
                         {/* VIEW: TICKET MIGRATE */}
                         {view === 'migrate' && (
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
-                                <div className="lg:col-span-7 bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-6">
-                                    <div className="flex items-center gap-2 mb-2"><IconFileText /><h2 className="font-black text-slate-700 uppercase italic tracking-tighter">Gerador de Ticket</h2></div>
+                                <div className="lg:col-span-7 bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-6 h-fit">
+                                    <div className="flex items-center gap-2 mb-2"><IconFileText /><h2 className="font-black text-slate-700 uppercase italic tracking-tighter text-xl underline decoration-[#f59e0b] decoration-4">Gerador de Ticket</h2></div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <input name="empresa" value={formData.empresa} onChange={handleInputChange} placeholder="Empresa" className="p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b]" />
-                                        <input name="cnpj" value={formData.cnpj} onChange={handleInputChange} placeholder="CNPJ" className="p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b]" />
+                                        <input name="empresa" value={formData.empresa} onChange={handleInputChange} placeholder="Empresa" className="p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b] w-full" />
+                                        <input name="cnpj" value={formData.cnpj} onChange={handleInputChange} placeholder="CNPJ" className="p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b] w-full" />
                                     </div>
                                     <div className="grid grid-cols-3 gap-4">
-                                        <input name="cidade" value={formData.cidade} onChange={handleInputChange} placeholder="Cidade / UF" className="col-span-2 p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b]" />
-                                        <input name="ambiente" value={formData.ambiente} onChange={handleInputChange} placeholder="Ambiente" className="p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b]" />
+                                        <input name="cidade" value={formData.cidade} onChange={handleInputChange} placeholder="Cidade / UF" className="col-span-2 p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b] w-full" />
+                                        <input name="ambiente" value={formData.ambiente} onChange={handleInputChange} placeholder="Ambiente" className="p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b] w-full" />
                                     </div>
                                     <textarea name="mensagemErro" value={formData.mensagemErro} onChange={handleInputChange} rows="2" placeholder="Mensagem de Erro" className="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b] resize-none" />
                                     <textarea name="detalhes" value={formData.detalhes} onChange={handleInputChange} rows="2" placeholder="Detalhes Extras" className="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:border-[#f59e0b] resize-none" />
-                                    <button onClick={generateTicket} className="w-full bg-[#2d3e50] text-white font-black py-4 rounded-xl hover:bg-slate-800 transition-all uppercase tracking-widest text-sm shadow-lg">Gerar e Guardar na Nuvem</button>
+                                    <button onClick={generateTicket} className="w-full bg-[#2d3e50] text-white font-black py-4 rounded-xl hover:bg-slate-800 transition-all uppercase tracking-widest text-sm shadow-lg">Gerar Texto</button>
                                 </div>
                                 <div className="lg:col-span-5 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col min-h-[400px]">
-                                    <div className="bg-[#2d3e50] p-4 flex justify-between items-center text-white"><span className="text-xs font-black uppercase italic tracking-widest">Texto Gerado</span>
+                                    <div className="bg-[#2d3e50] p-4 flex justify-between items-center text-white"><span className="text-xs font-black uppercase italic tracking-widest">Resultado</span>
                                     {generatedText && <button onClick={() => copyToClipboard(generatedText, 'main')} className={`p-2 rounded ${copyStatus['main'] ? 'bg-green-500' : 'bg-[#f59e0b]'} text-[#2d3e50]`}><IconClipboard /></button>}</div>
-                                    <div className="p-6 bg-slate-50 flex-1 font-mono text-xs text-slate-700 whitespace-pre-wrap select-all">{generatedText || "O texto gerado aparecerá aqui..."}</div>
+                                    <div className="p-6 bg-slate-50 flex-1 font-mono text-xs text-slate-700 whitespace-pre-wrap select-all leading-relaxed">
+                                        {generatedText || "O texto gerado aparecerá aqui..."}
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -410,10 +445,10 @@
                                     { title: "Atendimento Migrate", url: "https://atendimento.migrate.com.br/", desc: "Chamados oficiais Migrate." },
                                     { title: "Login Invoicy", url: "https://web.invoicy.com.br/login.aspx", desc: "Plataforma de gestão Invoicy." }
                                 ].map((l, i) => (
-                                    <a key={i} href={l.url} target="_blank" className="bg-white p-6 rounded-2xl shadow-md border-t-8 border-[#f59e0b] hover:shadow-xl transition-all group">
+                                    <a key={i} href={l.url} target="_blank" className="bg-white p-6 rounded-2xl shadow-md border-t-8 border-[#f59e0b] hover:shadow-xl transition-all group flex flex-col h-full">
                                         <h3 className="font-black text-slate-800 uppercase italic tracking-tighter mb-2 group-hover:text-amber-600">{l.title}</h3>
-                                        <p className="text-xs text-slate-500 mb-4">{l.desc}</p>
-                                        <div className="text-[10px] text-blue-500 truncate bg-slate-50 p-2 rounded">{l.url}</div>
+                                        <p className="text-xs text-slate-500 mb-4 flex-1">{l.desc}</p>
+                                        <div className="text-[10px] text-blue-500 truncate bg-slate-50 p-2 rounded border border-slate-100">{l.url}</div>
                                     </a>
                                 ))}
                             </div>
@@ -421,33 +456,33 @@
 
                         {/* VIEW: ESPECIALISTA */}
                         {view === 'especialista' && (
-                            <div className="animate-fadeIn flex justify-center pt-10">
+                            <div className="animate-fadeIn flex justify-center pt-10 w-full">
                                 {!isEspecialistaAuthed ? (
                                     <div className="bg-white p-10 rounded-3xl shadow-2xl border border-slate-200 w-full max-w-sm text-center">
                                         <div className="mb-6 flex justify-center"><div className="bg-slate-100 p-6 rounded-full text-[#f59e0b]"><IconShield /></div></div>
                                         <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-6">Setor Especialista</h2>
                                         <form onSubmit={handlePinSubmit} className="space-y-4">
-                                            <input type="password" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="PIN" className={`w-full text-center text-4xl p-4 bg-slate-50 border-2 rounded-2xl outline-none ${pinError ? 'border-red-500 animate-shake' : 'border-slate-200 focus:border-[#f59e0b]'}`} autoFocus />
+                                            <input type="password" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="PIN" className={`w-full text-center text-4xl p-4 bg-slate-50 border-2 rounded-2xl outline-none ${pinError ? 'border-red-500 animate-shake shadow-red-100 shadow-inner' : 'border-slate-200 focus:border-[#f59e0b]'}`} autoFocus />
                                             <button type="submit" className="w-full bg-[#2d3e50] text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all uppercase shadow-lg tracking-widest">Desbloquear</button>
                                         </form>
                                     </div>
                                 ) : (
                                     <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {credenciais.map((cred, idx) => (
-                                            <div key={idx} className={`bg-white rounded-2xl shadow-lg border-t-8 ${cred.color} overflow-hidden`}>
+                                            <div key={idx} className={`bg-white rounded-2xl shadow-lg border-t-8 ${cred.color || 'border-slate-400'} overflow-hidden`}>
                                                 <div className="p-6">
                                                     <h3 className="font-black text-xl text-slate-800 uppercase italic tracking-tighter mb-6 flex items-center gap-2 underline decoration-[#f59e0b] decoration-4">{cred.plataforma}</h3>
                                                     <div className="space-y-4">
                                                         <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">E-mail</label>
                                                             <div className="flex bg-slate-50 p-3 rounded-xl border border-slate-200 items-center gap-2">
                                                                 <span className="flex-1 font-mono text-sm truncate">{cred.login}</span>
-                                                                <button onClick={() => copyToClipboard(cred.login, `l-${idx}`)} className={`p-2 rounded ${copyStatus[`l-${idx}`] ? 'bg-green-500' : 'text-slate-400'}`}><IconClipboard /></button>
+                                                                <button onClick={() => copyToClipboard(cred.login, `l-${idx}`)} className={`p-2 rounded transition-colors ${copyStatus[`l-${idx}`] ? 'bg-green-500 text-white' : 'text-slate-400 hover:text-slate-600'}`}><IconClipboard /></button>
                                                             </div>
                                                         </div>
                                                         <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senha</label>
                                                             <div className="flex bg-slate-50 p-3 rounded-xl border border-slate-200 items-center gap-2">
                                                                 <span className="flex-1 font-mono text-sm font-black tracking-widest">{cred.senha}</span>
-                                                                <button onClick={() => copyToClipboard(cred.senha, `p-${idx}`)} className={`p-2 rounded ${copyStatus[`p-${idx}`] ? 'bg-green-500' : 'text-slate-400'}`}><IconClipboard /></button>
+                                                                <button onClick={() => copyToClipboard(cred.senha, `p-${idx}`)} className={`p-2 rounded transition-colors ${copyStatus[`p-${idx}`] ? 'bg-green-500 text-white' : 'text-slate-400 hover:text-slate-600'}`}><IconClipboard /></button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -461,7 +496,7 @@
                     </main>
 
                     <footer className="text-center p-8 text-slate-400 text-[10px] uppercase tracking-widest font-black italic">
-                        Softcom Tecnologia &copy; {new Date().getFullYear()} - Sistema de Apoio ao Suporte
+                        Softcom Tecnologia &copy; {new Date().getFullYear()} - Assistente Técnico
                     </footer>
                 </div>
             );
