@@ -18,15 +18,15 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #2d3e50; border-radius: 4px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-modalIn { animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
         #root { min-height: 100vh; }
         
-        .bg-softcom-blue { background-color: #2d3e50; }
-        .text-softcom-blue { color: #2d3e50; }
-        .border-softcom-yellow { border-color: #f59e0b; }
-        .bg-softcom-yellow { background-color: #f59e0b; }
-
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -44,7 +44,7 @@
     </div>
 
     <script type="text/babel" data-presets="react" data-type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js';
 
         const { useState, useEffect, useMemo } = React;
 
@@ -52,7 +52,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsbXFrcnFlc2ZtZnJqa2F3d3RmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzU4OTgsImV4cCI6MjA4ODIxMTg5OH0.wKERk4oDm7XJhGoq1TnsMJ1IK8hbHefJXJdCb1XKsLE';
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- Componentes de Ícones ---
+        // --- Ícones ---
         const IconHelp = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
         const IconSearch = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
         const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
@@ -63,10 +63,9 @@
         const IconClipboard = ({ width = "14", height = "14" }) => <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
         const IconArrowRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
         const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
-        const IconMenu = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
         const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const IconMenu = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
         const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
-        const IconKey = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778zM12 7l.34 1.59L14 9l1.41.34L17 11l1.59.34L20 13l-1.59 7.41"/></svg>;
 
         const IconNfseGov = () => (
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -127,8 +126,6 @@
             const [copyStatus, setCopyStatus] = useState({});
             const [editErrorInput, setEditErrorInput] = useState('');
             const [editSolutionInput, setEditSolutionInput] = useState('');
-            const [ticketForm, setTicketForm] = useState({ empresa: '', cnpj: '', erro: '' });
-            const [generatedText, setGeneratedText] = useState('');
             const [isEspecialistaAuthed, setIsEspecialistaAuthed] = useState(false);
             const [pinInput, setPinInput] = useState('');
 
@@ -140,11 +137,10 @@
                 { title: "Portal NFS-e Nacional (XML)", desc: "Aceder para descarregar XML caso o cliente use o ambiente nacional.", url: "https://www.nfse.gov.br/EmissorNacional/Login?ReturnUrl=%2FEmissorNacional", icon: <IconNfseGov /> }
             ];
 
-            // --- CREDENCIAIS ESPECIALISTA ---
+            // --- CREDENCIAIS ATUALIZADAS ---
             const credenciais = [
-                { portal: "Migrate Portaria", user: "softcom@suporte", pass: "Sft#2024*Mig" },
-                { portal: "Invoicy Admin", user: "admin_softcom", pass: "Soft#9911*Inv" },
-                { portal: "Supabase DB", user: "service_role", pass: "JWT_SEC_7711_SC" }
+                { portal: "Invoicy", user: "renato.rodrigues@softcomtecnologia.com.br", pass: "Softcom12" },
+                { portal: "Migrate", user: "suporte.nfse.softcom@gmail.com", pass: "Sfc@3321" }
             ];
 
             // --- FLUXOGRAMA ---
@@ -213,7 +209,7 @@
                     options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não (Rejeitada)", next: "verificar_erro_exibe" }]
                 },
                 verificar_erro_exibe: {
-                    instruction: "Analise o erro exibido no monitor da Migrate. Utilize o GPT, Google ou a aba 'Erros Mapeados'.",
+                    instruction: "Analise o erro exibido no monitor da Migrate. Utilize o GPT, Google ou a Base de Soluções.",
                     question: "Conseguiu resolver com o ajuste técnico?",
                     options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "abrir_ticket_migrate" }]
                 },
@@ -236,20 +232,46 @@
 
             useEffect(() => { fetchErrors(); }, []);
 
-            const handleSaveError = async (e) => {
-                e.preventDefault();
-                setSaveStatus('loading');
-                const { error } = await supabase.from('mapped_errors').insert([{ erro: errorInput, solucao: solutionInput }]);
-                if (error) setSaveStatus('error');
-                else { setSaveStatus('success'); setErrorInput(''); setSolutionInput(''); fetchErrors(); setTimeout(() => { setSaveStatus(null); setView('erros_mapeados'); }, 1500); }
+            const openEditModal = (item) => {
+                setEditErrorInput(item.erro);
+                setEditSolutionInput(item.solucao);
+                setEditingError(item);
             };
 
             const handleUpdateError = async (e) => {
                 e.preventDefault();
                 setSaveStatus('loading');
-                const { error } = await supabase.from('mapped_errors').update({ erro: editErrorInput, solucao: editSolutionInput }).eq('id', editingError.id);
+                const { error } = await supabase.from('mapped_errors').update({ 
+                    erro: editErrorInput, 
+                    solucao: editSolutionInput 
+                }).eq('id', editingError.id);
+                
+                if (error) {
+                    setSaveStatus('error');
+                } else {
+                    setSaveStatus('success');
+                    fetchErrors();
+                    setTimeout(() => {
+                        setSaveStatus(null);
+                        setEditingError(null);
+                        if(selectedError && selectedError.id === editingError.id) {
+                            setSelectedError({...selectedError, erro: editErrorInput, solucao: editSolutionInput});
+                        }
+                    }, 1000);
+                }
+            };
+
+            const handleSaveError = async (e) => {
+                e.preventDefault();
+                setSaveStatus('loading');
+                const { error } = await supabase.from('mapped_errors').insert([{ erro: errorInput, solucao: solutionInput }]);
                 if (error) setSaveStatus('error');
-                else { setSaveStatus('success'); fetchErrors(); setTimeout(() => { setSaveStatus(null); setEditingError(null); }, 1000); }
+                else {
+                    setSaveStatus('success');
+                    setErrorInput(''); setSolutionInput('');
+                    fetchErrors();
+                    setTimeout(() => { setSaveStatus(null); setView('erros_mapeados'); }, 1500);
+                }
             };
 
             const deleteError = async (id) => {
@@ -276,8 +298,8 @@
             };
 
             return (
-                <div className="min-h-screen flex flex-col bg-slate-100 font-sans">
-                    <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] z-50">
+                <div className="min-h-screen flex flex-col bg-slate-100 font-sans antialiased">
+                    <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] sticky top-0 z-[60]">
                         <div className="flex items-center gap-4">
                             <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
                                 {menuOpen ? <IconX /> : <IconMenu />}
@@ -286,17 +308,17 @@
                         </div>
                         <div className="hidden md:flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                            <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none tracking-tighter">Conexão Cloud</span>
+                            <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none tracking-tighter">Database Cloud</span>
                         </div>
                     </header>
 
-                    <div className={`fixed inset-y-0 left-0 w-64 bg-[#2d3e50] shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-r border-slate-700 pt-24 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                    <div className={`fixed inset-y-0 left-0 w-64 bg-[#2d3e50] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-r border-slate-700 pt-24 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                         <nav className="p-4 flex flex-col gap-2">
                             <button onClick={() => { setView('analise'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'analise' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
                                 <IconHelp /> ASSISTENTE NFSE
                             </button>
                             <button onClick={() => { setView('erros_mapeados'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'erros_mapeados' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconSearch /> ERROS MAPEADOS
+                                <IconSearch /> BASE DE SOLUÇÕES
                             </button>
                             <button onClick={() => { setView('mapear_erro'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'mapear_erro' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
                                 <IconPlus /> MAPEAR ERRO
@@ -305,29 +327,24 @@
                                 <IconExternalLink /> LINKS ÚTEIS
                             </button>
                             <div className="my-2 border-t border-slate-700"></div>
-                            <button onClick={() => { setView('migrate'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'migrate' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconFileText /> TICKET MIGRATE
-                            </button>
                             <button onClick={() => { setView('especialista'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'especialista' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
                                 <IconShield /> SETOR ESPECIALISTA
                             </button>
                         </nav>
                     </div>
 
-                    {menuOpen && <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setMenuOpen(false)}></div>}
+                    {menuOpen && <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40" onClick={() => setMenuOpen(false)}></div>}
 
                     <main className="max-w-6xl mx-auto w-full p-4 md:p-8 flex-1 flex flex-col">
                         
                         {view === 'analise' && (
                             <div className="animate-fadeIn max-w-2xl mx-auto w-full space-y-8">
                                 <div className="text-center">
-                                    <h1 className="text-3xl font-black text-slate-800 italic uppercase mb-1 leading-none tracking-tighter">Assistente NFSe</h1>
+                                    <h1 className="text-3xl font-black text-slate-800 italic uppercase leading-none tracking-tighter">Assistente NFSe</h1>
                                     <p className="text-slate-500 font-medium italic uppercase text-[10px]">Diagnóstico Softcom</p>
                                 </div>
                                 <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[420px] flex flex-col">
-                                    <div className="h-2 bg-slate-100 w-full">
-                                        <div className="h-full bg-[#f59e0b] transition-all duration-500" style={{ width: `${(flowHistory.length / 14) * 100}%` }}></div>
-                                    </div>
+                                    <div className="h-2 bg-slate-100 w-full"><div className="h-full bg-[#f59e0b] transition-all duration-500" style={{ width: `${(flowHistory.length / 14) * 100}%` }}></div></div>
                                     <div className="p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center">
                                         {flowchart[currentStep].instruction && (
                                             <div className="bg-amber-50 border-l-4 border-[#f59e0b] p-6 rounded-r-xl w-full mb-8 text-left animate-fadeIn">
@@ -365,22 +382,6 @@
                             </div>
                         )}
 
-                        {view === 'mapear_erro' && (
-                            <div className="animate-fadeIn max-w-2xl mx-auto w-full">
-                                <div className="mb-8 flex items-center gap-4">
-                                    <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconPlus /></div>
-                                    <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Mapear Novo Erro</h2>
-                                </div>
-                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
-                                    <form onSubmit={handleSaveError} className="space-y-6">
-                                        <div><label className="block text-[10px] font-black uppercase text-slate-400 mb-2">Mensagem do Erro</label><textarea required rows="3" value={errorInput} onChange={(e) => setErrorInput(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#f59e0b] transition-all font-bold" /></div>
-                                        <div><label className="block text-[10px] font-black uppercase text-slate-400 mb-2">Solução Técnica</label><textarea required rows="6" value={solutionInput} onChange={(e) => setSolutionInput(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#f59e0b] transition-all font-bold" /></div>
-                                        <button type="submit" disabled={saveStatus === 'loading'} className="w-full bg-[#2d3e50] text-white font-black py-5 rounded-2xl hover:bg-slate-800 transition-all uppercase tracking-widest shadow-lg">GRAVAR SOLUÇÃO</button>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
                         {view === 'erros_mapeados' && (
                             <div className="animate-fadeIn w-full space-y-8">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -392,20 +393,57 @@
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {filteredErrors.map((item) => (
-                                        <div key={item.id} className="bg-white rounded-3xl shadow-md border-2 border-transparent hover:border-[#f59e0b] transition-all p-6 flex flex-col group">
+                                        <div key={item.id} className="bg-white rounded-[2.5rem] shadow-md border-2 border-transparent hover:border-[#f59e0b] transition-all p-6 flex flex-col group h-full cursor-pointer" onClick={() => setSelectedError(item)}>
                                             <div className="flex justify-between mb-4">
-                                                <div className="bg-slate-100 p-2 rounded-lg text-[#2d3e50]"><IconFileText /></div>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                    <button onClick={(e) => { e.stopPropagation(); setEditingError(item); setEditErrorInput(item.erro); setEditSolutionInput(item.solucao); }} className="text-slate-300 hover:text-[#f59e0b] p-1"><IconEdit /></button>
-                                                    <button onClick={(e) => { e.stopPropagation(); deleteError(item.id); }} className="text-slate-300 hover:text-red-500 p-1"><IconTrash /></button>
+                                                <div className="bg-slate-50 p-2.5 rounded-xl text-[#2d3e50] group-hover:bg-[#f59e0b]/10 group-hover:text-[#f59e0b] transition-colors"><IconFileText /></div>
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); openEditModal(item); }} 
+                                                        className="text-slate-400 hover:text-[#f59e0b] p-2 bg-slate-50 rounded-lg hover:bg-amber-50 transition-all"
+                                                    >
+                                                        <IconEdit />
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); deleteError(item.id); }} 
+                                                        className="text-slate-400 hover:text-red-500 p-2 bg-slate-50 rounded-lg hover:bg-red-50 transition-all"
+                                                    >
+                                                        <IconTrash />
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <h3 className="text-slate-800 font-black uppercase text-xs italic tracking-tight mb-3 line-clamp-2 border-l-4 border-[#f59e0b] pl-3 leading-tight">{item.erro}</h3>
-                                            <button onClick={() => setSelectedError(item)} className="mt-auto w-full py-3 bg-slate-100 text-[#2d3e50] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2d3e50] hover:text-white transition-all">
-                                                VER SOLUÇÃO
-                                            </button>
+                                            <h3 className="text-[#2d3e50] font-black uppercase text-xs italic tracking-tight mb-4 line-clamp-3 border-l-4 border-slate-100 group-hover:border-[#f59e0b] pl-3 leading-tight transition-all">
+                                                {item.erro}
+                                            </h3>
+                                            <div className="mt-auto pt-4 border-t text-[10px] font-black text-[#f59e0b] uppercase tracking-widest flex items-center justify-between">
+                                                <span>Ver Solução Completa</span>
+                                                <IconArrowRight />
+                                            </div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'mapear_erro' && (
+                            <div className="animate-fadeIn max-w-2xl mx-auto w-full">
+                                <div className="mb-8 flex items-center gap-4">
+                                    <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconPlus /></div>
+                                    <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Mapear Novo Erro</h2>
+                                </div>
+                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 md:p-10">
+                                    <form onSubmit={handleSaveError} className="space-y-8">
+                                        <div>
+                                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-3 leading-none tracking-widest">Rejeição Detectada</label>
+                                            <textarea required rows="3" value={errorInput} onChange={(e) => setErrorInput(e.target.value)} placeholder="Cole aqui a mensagem de erro..." className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#f59e0b] transition-all font-bold text-slate-700" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-3 leading-none tracking-widest">Solução Técnica</label>
+                                            <textarea required rows="8" value={solutionInput} onChange={(e) => setSolutionInput(e.target.value)} placeholder="Descreva o passo a passo da correção..." className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#f59e0b] transition-all font-bold text-slate-700" />
+                                        </div>
+                                        <button type="submit" disabled={saveStatus === 'loading'} className="w-full bg-[#2d3e50] text-white font-black py-6 rounded-2xl hover:bg-slate-800 transition-all uppercase tracking-widest shadow-xl">
+                                            {saveStatus === 'loading' ? 'A PROCESSAR...' : 'GRAVAR SOLUÇÃO'}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         )}
@@ -414,16 +452,19 @@
                             <div className="animate-fadeIn w-full space-y-8">
                                 <div className="flex items-center gap-4">
                                     <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconExternalLink /></div>
-                                    <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Links & Portais</h2>
+                                    <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none tracking-tighter">Links & Portais Úteis</h2>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                                     {linksUteis.map((link, idx) => (
-                                        <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-3xl shadow-md border-2 border-transparent hover:border-[#f59e0b] transition-all group flex flex-col justify-between h-48">
-                                            <div>
-                                                <div className="flex justify-between mb-4"><div className="text-slate-400 group-hover:text-[#f59e0b] transition-colors">{link.icon}</div><IconExternalLink /></div>
-                                                <h3 className="text-[#2d3e50] font-black uppercase italic tracking-tighter mb-2 leading-none">{link.title}</h3>
-                                                <p className="text-slate-500 text-xs font-bold leading-tight line-clamp-2">{link.desc}</p>
+                                        <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-[2rem] shadow-md border-2 border-transparent hover:border-[#f59e0b] transition-all group flex items-center justify-between h-32">
+                                            <div className="flex items-center gap-5">
+                                                <div className="bg-slate-50 p-5 rounded-2xl text-slate-400 group-hover:bg-[#f59e0b] group-hover:text-[#2d3e50] transition-all shadow-inner">{link.icon}</div>
+                                                <div>
+                                                    <h3 className="text-slate-800 font-black uppercase italic tracking-tighter text-lg leading-none mb-1">{link.title}</h3>
+                                                    <p className="text-slate-500 text-[10px] font-bold uppercase leading-none opacity-60">{link.desc}</p>
+                                                </div>
                                             </div>
+                                            <IconArrowRight />
                                         </a>
                                     ))}
                                 </div>
@@ -431,36 +472,36 @@
                         )}
 
                         {view === 'especialista' && (
-                            <div className="animate-fadeIn flex justify-center pt-6 w-full">
+                            <div className="animate-fadeIn flex justify-center w-full">
                                 {!isEspecialistaAuthed ? (
-                                    <div className="bg-white p-10 rounded-3xl shadow-2xl border border-slate-200 w-full max-w-sm text-center">
-                                        <div className="mb-6 flex justify-center"><div className="bg-slate-100 p-6 rounded-full text-[#f59e0b]"><IconShield /></div></div>
-                                        <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-6 leading-none">Acesso Especialista</h2>
-                                        <input type="password" maxLength="4" value={pinInput} onChange={(e) => { setPinInput(e.target.value); if(e.target.value === '7711') setIsEspecialistaAuthed(true); }} placeholder="PIN" className="w-full text-center text-4xl p-4 bg-slate-50 border-2 rounded-2xl outline-none border-slate-200 focus:border-[#f59e0b] tracking-[0.5em] font-black" autoFocus />
+                                    <div className="bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-200 w-full max-w-sm text-center">
+                                        <div className="mb-8 flex justify-center"><div className="bg-slate-50 p-10 rounded-full text-[#f59e0b] shadow-inner"><IconShield /></div></div>
+                                        <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-10 leading-none">Acesso Especialista</h2>
+                                        <input type="password" maxLength="4" value={pinInput} onChange={(e) => { setPinInput(e.target.value); if(e.target.value === '7711') setIsEspecialistaAuthed(true); }} placeholder="PIN" className="w-full text-center text-5xl p-6 bg-slate-50 border-2 rounded-2xl outline-none border-slate-200 focus:border-[#f59e0b] tracking-[0.4em] font-black" autoFocus />
                                     </div>
                                 ) : (
-                                    <div className="w-full space-y-8 animate-fadeIn">
+                                    <div className="w-full space-y-10 animate-fadeIn">
                                         <div className="flex items-center gap-4">
-                                            <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg"><IconKey /></div>
-                                            <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Painel de Credenciais</h2>
+                                            <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg"><IconShield /></div>
+                                            <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none tracking-tighter">Credenciais do Setor</h2>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
                                             {credenciais.map((c, i) => (
-                                                <div key={i} className="bg-white p-6 rounded-3xl shadow-xl border-t-4 border-[#f59e0b] flex flex-col gap-4">
-                                                    <h3 className="text-slate-800 font-black uppercase italic tracking-tight border-b pb-2">{c.portal}</h3>
-                                                    <div className="space-y-3">
+                                                <div key={i} className="bg-white p-10 rounded-[2.5rem] shadow-xl border-t-[10px] border-[#f59e0b] flex flex-col gap-6">
+                                                    <h3 className="text-slate-800 font-black uppercase italic tracking-tighter text-2xl mb-2">{c.portal}</h3>
+                                                    <div className="space-y-5">
                                                         <div>
-                                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1 leading-none">Utilizador</p>
-                                                            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border">
-                                                                <span className="font-bold text-sm text-slate-600 truncate mr-2">{c.user}</span>
-                                                                <button onClick={() => copyToClipboard(c.user, `u_${i}`)} className={`p-2 rounded-lg transition-colors ${copyStatus[`u_${i}`] ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}><IconClipboard /></button>
+                                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2 leading-none">Email / Utilizador</p>
+                                                            <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
+                                                                <span className="font-bold text-slate-600 truncate mr-4">{c.user}</span>
+                                                                <button onClick={() => copyToClipboard(c.user, `u_${i}`)} className={`p-3 rounded-xl transition-all ${copyStatus[`u_${i}`] ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><IconClipboard /></button>
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1 leading-none">Password</p>
-                                                            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border">
-                                                                <span className="font-mono font-bold text-sm text-slate-600 truncate mr-2">••••••••</span>
-                                                                <button onClick={() => copyToClipboard(c.pass, `p_${i}`)} className={`p-2 rounded-lg transition-colors ${copyStatus[`p_${i}`] ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}><IconClipboard /></button>
+                                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2 leading-none">Password</p>
+                                                            <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
+                                                                <span className="font-mono font-bold text-slate-600">••••••••</span>
+                                                                <button onClick={() => copyToClipboard(c.pass, `p_${i}`)} className={`p-3 rounded-xl transition-all ${copyStatus[`p_${i}`] ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><IconClipboard /></button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -473,32 +514,63 @@
                         )}
                     </main>
 
-                    <footer className="text-center p-8 text-slate-400 text-[10px] font-black uppercase italic tracking-widest leading-none tracking-tighter">
-                        Softcom Tecnologia &copy; {new Date().getFullYear()} - Suporte NFSe Cloud
-                    </footer>
-
+                    {/* --- TELINHA DE SOLUÇÃO (MODAL DE DETALHES) --- */}
                     {selectedError && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={() => setSelectedError(null)}>
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 md:p-12 relative animate-fadeIn" onClick={e => e.stopPropagation()}>
-                                <button 
-                                    onClick={() => setSelectedError(null)} 
-                                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
-                                >
-                                    <IconX />
-                                </button>
-                                <h2 className="text-2xl font-black text-[#2d3e50] uppercase italic tracking-tighter mb-6 border-b-4 border-[#f59e0b] pb-4">
-                                    {selectedError.erro}
-                                </h2>
-                                <div className="max-h-[50vh] overflow-y-auto custom-scrollbar pr-4 mb-8">
-                                    <p className="text-slate-700 whitespace-pre-wrap font-medium text-lg leading-relaxed">{selectedError.solucao}</p>
+                        <div className="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn" onClick={() => setSelectedError(null)}>
+                            <div className="bg-white rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] w-full max-w-2xl p-8 md:p-14 relative animate-modalIn" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedError(null)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"><IconX /></button>
+                                <div className="mb-8">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
+                                        <span className="text-[#f59e0b] font-black uppercase text-[10px] tracking-[0.3em] leading-none">Conhecimento Mapeado</span>
+                                    </div>
+                                    <h2 className="text-2xl md:text-3xl font-black text-[#2d3e50] uppercase italic tracking-tighter leading-tight select-text">{selectedError.erro}</h2>
                                 </div>
-                                <button onClick={() => copyToClipboard(selectedError.solucao, `modal_${selectedError.id}`)} className="w-full py-4 bg-slate-100 text-[#2d3e50] rounded-xl text-sm font-black uppercase tracking-widest hover:bg-[#2d3e50] hover:text-white transition-all flex items-center justify-center gap-2">
-                                    <IconClipboard width="18" height="18" />
-                                    {copyStatus[`modal_${selectedError.id}`] ? "Copiado!" : "Copiar Solução"}
-                                </button>
+                                <div className="bg-slate-50 rounded-[2rem] p-6 md:p-8 border border-slate-100 mb-8 max-h-[40vh] overflow-y-auto custom-scrollbar">
+                                    <p className="text-slate-700 whitespace-pre-wrap font-bold text-lg md:text-xl leading-relaxed select-text">{selectedError.solucao}</p>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <button onClick={() => openEditModal(selectedError)} className="py-5 px-8 rounded-2xl bg-white border-2 border-slate-200 text-slate-400 hover:text-[#f59e0b] hover:border-[#f59e0b] transition-all shadow-sm"><IconEdit /></button>
+                                    <button onClick={() => copyToClipboard(selectedError.solucao, `modal_${selectedError.id}`)} className={`flex-1 py-5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl ${copyStatus[`modal_${selectedError.id}`] ? 'bg-emerald-500 text-white' : 'bg-[#2d3e50] text-white hover:bg-slate-800'}`}>
+                                        <IconClipboard width="18" height="18" />
+                                        {copyStatus[`modal_${selectedError.id}`] ? "COPIADO!" : "COPIAR SOLUÇÃO"}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
+
+                    {/* --- MODAL DE EDIÇÃO --- */}
+                    {editingError && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-fadeIn">
+                            <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-modalIn" onClick={e => e.stopPropagation()}>
+                                <div className="bg-[#2d3e50] p-8 border-b-4 border-[#f59e0b] flex justify-between items-center text-white">
+                                    <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none">Editar Mapeamento</h3>
+                                    <button onClick={() => setEditingError(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><IconX /></button>
+                                </div>
+                                <form onSubmit={handleUpdateError} className="p-10 space-y-6 bg-slate-50">
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest leading-none">Título / Erro</label>
+                                        <textarea required rows="3" value={editErrorInput} onChange={(e) => setEditErrorInput(e.target.value)} className="w-full p-5 bg-white border-2 border-slate-100 rounded-[1.5rem] outline-none focus:border-[#f59e0b] font-bold text-slate-700 shadow-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest leading-none">Instruções Técnicas</label>
+                                        <textarea required rows="8" value={editSolutionInput} onChange={(e) => setEditSolutionInput(e.target.value)} className="w-full p-5 bg-white border-2 border-slate-100 rounded-[1.5rem] outline-none focus:border-[#f59e0b] font-bold text-slate-700 shadow-sm" />
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <button type="button" onClick={() => setEditingError(null)} className="flex-1 py-5 bg-slate-200 text-slate-600 font-black rounded-2xl uppercase text-xs tracking-widest transition-colors hover:bg-slate-300">Descartar</button>
+                                        <button type="submit" className="flex-[2] py-5 bg-[#f59e0b] text-[#2d3e50] font-black rounded-2xl uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all">
+                                            {saveStatus === 'loading' ? 'A SALVAR...' : 'SALVAR ALTERAÇÕES'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="text-center p-8 text-slate-400 text-[10px] font-black uppercase italic tracking-widest leading-none tracking-tighter opacity-50">
+                        Softcom Tecnologia &copy; {new Date().getFullYear()} • Suporte NFSe Cloud
+                    </footer>
                 </div>
             );
         };
