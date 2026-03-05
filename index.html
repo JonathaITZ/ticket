@@ -7,6 +7,21 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        softcom: {
+                            dark: '#2d3e50',
+                            orange: '#f59e0b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- React & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -14,31 +29,40 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
         .softcom-italic { font-style: italic; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #2d3e50; border-radius: 4px; }
         
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.98) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
-        .animate-modalIn { animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fadeIn { animation: fadeIn 0.2s ease-out forwards; }
+        .animate-modalIn { animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        #root { min-height: 100vh; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        #root { min-height: 100vh; display: flex; flex-direction: column; }
     </style>
 </head>
-<body class="bg-slate-100 font-sans text-slate-800">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
 
     <div id="root">
-        <div class="min-h-screen flex items-center justify-center bg-[#2d3e50]">
+        <!-- Loader inicial -->
+        <div class="flex-1 flex items-center justify-center bg-[#2d3e50]">
             <div class="text-center">
-                <div class="w-12 h-12 border-4 border-t-[#f59e0b] border-slate-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-white font-bold italic tracking-tighter uppercase text-xs">A carregar Assistente Softcom...</p>
+                <div class="w-10 h-10 border-4 border-t-[#f59e0b] border-slate-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-white font-medium tracking-tight text-sm animate-pulse">A carregar Assistente Softcom...</p>
             </div>
         </div>
     </div>
@@ -52,67 +76,42 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsbXFrcnFlc2ZtZnJqa2F3d3RmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzU4OTgsImV4cCI6MjA4ODIxMTg5OH0.wKERk4oDm7XJhGoq1TnsMJ1IK8hbHefJXJdCb1XKsLE';
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- Ícones ---
-        const IconHelp = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-        const IconSearch = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
-        const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
-        const IconFileText = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>;
-        const IconShield = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+        // --- Ícones Refinados ---
+        const IconHelp = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+        const IconSearch = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+        const IconFileText = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>;
+        const IconShield = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
         const IconTrash = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>;
         const IconEdit = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
-        const IconClipboard = ({ width = "14", height = "14" }) => <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
-        const IconArrowRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
-        const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
-        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-        const IconMenu = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
-        const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+        const IconClipboard = ({ size = 18 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
+        const IconArrowRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
+        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const IconMenu = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+        const IconTicket = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9V5.2a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2V9a2 2 0 0 0 0 4v3.8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V13a2 2 0 0 0 0-4Z"/><path d="M15 3v18"/><path d="m8 12 2 2 4-4"/></svg>;
 
-        const IconNfseGov = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <path d="M12 18v-6"></path>
-                <path d="m9 15 3 3 3-3"></path>
-            </svg>
-        );
+        const IconSun = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
+        const IconMoon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>;
 
-        const IconDashboard = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="9"></rect>
-                <rect x="14" y="3" width="7" height="5"></rect>
-                <rect x="14" y="11" width="7" height="10"></rect>
-                <rect x="3" y="15" width="7" height="6"></rect>
-            </svg>
-        );
+        const IconInvoicy = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+        const IconDashboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>;
+        const IconMigrate = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>;
+        const IconSheet = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>;
 
-        const IconPortal = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-        );
-
-        const IconSupport = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-        );
-
-        const SoftcomLogo = ({ size = "45" }) => (
-            <div className="flex items-center gap-2">
-                <svg width={size} height={(size * 35)/45} viewBox="0 0 45 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 8C4 6.89543 4.89543 6 6 6H16.5L19.5 9H39C40.1046 9 41 9.89543 41 11V13H4V8Z" fill="#EAB308" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
-                    <path d="M2 12C2 10.8954 2.89543 10 4 10H41C42.1046 10 43 10.8954 43 12V28C43 29.1046 42.1046 30 41 30H4C2.89543 30 2 29.1046 2 28V12Z" fill="#FBCC14" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
+        const SoftcomLogo = () => (
+            <div className="flex items-center gap-2 select-none">
+                <svg width="32" height="26" viewBox="0 0 150 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 42C8 38.6863 10.6863 36 14 36H132C135.314 36 138 38.6863 138 42V94C138 97.3137 135.314 100 132 100H14C10.6863 100 8 97.3137 8 94V42Z" fill="#FBBF24" stroke="black" strokeWidth="4"/>
                 </svg>
-                <span className="text-3xl font-black italic tracking-tighter text-white select-none softcom-italic" style={{ letterSpacing: '-0.08em' }}>
-                    softcom
-                </span>
+                <span className="text-xl font-bold italic tracking-tighter text-white softcom-italic">softcom</span>
             </div>
         );
 
         const App = () => {
-            const [view, setView] = useState('analise');
+            const [view, setView] = useState('erros_mapeados');
             const [menuOpen, setMenuOpen] = useState(false);
+            const [darkMode, setDarkMode] = useState(false);
             const [currentStep, setCurrentStep] = useState('inicio');
             const [flowHistory, setFlowHistory] = useState([]);
             const [mappedErrors, setMappedErrors] = useState([]);
@@ -120,171 +119,99 @@
             const [selectedError, setSelectedError] = useState(null);
             const [editingError, setEditingError] = useState(null);
             const [loading, setLoading] = useState(false);
-            const [errorInput, setErrorInput] = useState('');
-            const [solutionInput, setSolutionInput] = useState('');
             const [saveStatus, setSaveStatus] = useState(null);
             const [copyStatus, setCopyStatus] = useState({});
-            const [editErrorInput, setEditErrorInput] = useState('');
-            const [editSolutionInput, setEditSolutionInput] = useState('');
             const [isEspecialistaAuthed, setIsEspecialistaAuthed] = useState(false);
             const [pinInput, setPinInput] = useState('');
+            const [itemToDelete, setItemToDelete] = useState(null);
 
-            // --- LINKS ÚTEIS ---
+            const [errorInput, setErrorInput] = useState('');
+            const [solutionInput, setSolutionInput] = useState('');
+            const [editErrorInput, setEditErrorInput] = useState('');
+            const [editSolutionInput, setEditSolutionInput] = useState('');
+
+            const [ticketData, setTicketData] = useState({ empresa: '', cnpj: '', cidade: '', mensagemErro: '', detalhes: '', ambiente: '' });
+            const [generatedTicketText, setGeneratedTicketText] = useState('');
+
             const linksUteis = [
-                { title: "Verificação de Ambiente Migrate", desc: "Portal para verificação técnica de ambientes.", url: "https://painel-dfe-production-382497636524.us-central1.run.app/", icon: <IconDashboard /> },
-                { title: "Portal Invoicy", desc: "Acesso ao emissor Invoicy.", url: "https://web.invoicy.com.br/login.aspx", icon: <IconPortal /> },
-                { title: "Atendimento Migrate", desc: "Portal de suporte técnico Migrate.", url: "https://atendimento.migrate.com.br/Account/Login", icon: <IconSupport /> },
-                { title: "Portal NFS-e Nacional (XML)", desc: "Aceder para descarregar XML caso o cliente use o ambiente nacional.", url: "https://www.nfse.gov.br/EmissorNacional/Login?ReturnUrl=%2FEmissorNacional", icon: <IconNfseGov /> }
+                { title: "Portal Invoicy", url: "https://web.invoicy.com.br/", description: "Logs técnicos e verificação detalhada.", icon: <IconInvoicy /> },
+                { title: "Dashboard Ambientes", url: "https://painel-dfe-production-382497636524.us-central1.run.app/", description: "Status de transmissão por município.", icon: <IconDashboard /> },
+                { title: "Atendimento Migrate", url: "https://atendimento.migrate.com.br/Account/Login", description: "Abertura de chamados externos.", icon: <IconMigrate /> },
+                { title: "Planilha Ambiente Nacional", url: "https://docs.google.com/spreadsheets/d/1n81k8BaNEDzAmqRJkYgK1q2OseDVIukbGQklLR9ABCI/edit?usp=sharing", description: "Consulta de habilitação nacional.", icon: <IconSheet /> }
             ];
 
-            // --- CREDENCIAIS ATUALIZADAS ---
-            const credenciais = [
-                { portal: "Invoicy", user: "renato.rodrigues@softcomtecnologia.com.br", pass: "Softcom12" },
-                { portal: "Migrate", user: "suporte.nfse.softcom@gmail.com", pass: "Sfc@3321" }
-            ];
-
-            // --- FLUXOGRAMA ---
             const flowchart = {
-                inicio: {
-                    question: "O cliente já emite NFS-e pelo sistema?",
-                    options: [{ label: "Sim", next: "cliente_desktop_web" }, { label: "Não", next: "solicitar_xml_pdf" }]
-                },
-                solicitar_xml_pdf: {
-                    instruction: "Peça ao cliente o XML de uma nota teste e o PDF emitido este ano na prefeitura.",
-                    question: "Arquivos recebidos?",
-                    options: [{ label: "Sim", next: "comparar_dados" }, { label: "Não", next: "solicitar_xml_pdf" }]
-                },
-                comparar_dados: {
-                    instruction: "Compare os dados da nota do sistema com a nota teste e deixe os dados do serviço iguais.",
-                    question: "O ajuste resolveu o problema?",
-                    options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "cliente_desktop_web" }]
-                },
-                cliente_desktop_web: {
-                    question: "Qual o ambiente do cliente?",
-                    options: [{ label: "Desktop", next: "subindo_migrate_desktop" }, { label: "Web", next: "subindo_migrate_web" }]
-                },
-                subindo_migrate_desktop: {
-                    question: "A nota está a subir para o monitor da Migrate?",
-                    options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "verificar_versao_emissor" }]
-                },
-                verificar_versao_emissor: {
-                    instruction: "Verifique a versão do emissor de notas e valide se está atualizado.",
-                    question: "Versão verificada?",
-                    options: [{ label: "Sim, Próximo", next: "refazer_pedido_zero_desktop" }]
-                },
-                refazer_pedido_zero_desktop: {
-                    instruction: "Refaça o pedido do zero no sistema e tente emitir a nota novamente.",
-                    question: "Resolveu o problema?",
-                    options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "versao_inferior_910" }]
-                },
-                versao_inferior_910: {
-                    question: "A versão do sistema é inferior a 9.10?",
-                    options: [{ label: "Sim", next: "passar_atualizador" }, { label: "Não", next: "reconfigurar_emissor_zero" }]
-                },
-                passar_atualizador: {
-                    instruction: "Execute o atualizador de versões no sistema do cliente.",
-                    isEnd: true, type: "action", title: "Fim - Atualizar Versões"
-                },
-                subindo_migrate_web: {
-                    question: "A nota está a subir para o monitor da Migrate?",
-                    options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "refazer_pedido_zero_web" }]
-                },
-                refazer_pedido_zero_web: {
-                    instruction: "Refaça o pedido do zero no sistema e tente emitir a nota novamente.",
-                    question: "Resolveu o problema?",
-                    options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "reconfigurar_emissor_zero" }]
-                },
-                reconfigurar_emissor_zero: {
-                    instruction: "Reconfigure as definições do emissor NFSe do zero.",
-                    question: "Reconfigurado?",
-                    options: [{ label: "Sim, Próximo", next: "limpar_tabela_config" }]
-                },
-                limpar_tabela_config: {
-                    instruction: "Na tabela 'softcom_modulo_configurações', apague os dados da NFSe. Reconfigure e teste novamente.",
-                    question: "A nota subiu agora para a Migrate?",
-                    options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "abrir_ticket_migrate" }]
-                },
-                foi_autorizada: {
-                    question: "A nota foi autorizada na prefeitura?",
-                    options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não (Rejeitada)", next: "verificar_erro_exibe" }]
-                },
-                verificar_erro_exibe: {
-                    instruction: "Analise o erro exibido no monitor da Migrate. Utilize o GPT, Google ou a Base de Soluções.",
-                    question: "Conseguiu resolver com o ajuste técnico?",
-                    options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "abrir_ticket_migrate" }]
-                },
-                abrir_ticket_migrate: {
-                    instruction: "Abra um ticket com a Migrate relatando o incidente.",
-                    isEnd: true, type: "action", title: "Fim - Abrir Ticket"
-                },
-                fim_sucesso: {
-                    instruction: "Excelente! O problema foi resolvido com sucesso.",
-                    isEnd: true, type: "success", title: "Fim - Resolvido"
-                }
+                inicio: { question: "O cliente já emite NFS-e pelo sistema?", options: [{ label: "Sim", next: "cliente_desktop_web" }, { label: "Não", next: "solicitar_xml_pdf" }] },
+                solicitar_xml_pdf: { instruction: "Peça ao cliente o XML de uma nota teste e o PDF emitido este ano.", question: "Arquivos recebidos?", options: [{ label: "Sim", next: "comparar_dados" }, { label: "Não", next: "solicitar_xml_pdf" }] },
+                comparar_dados: { instruction: "Compare os dados da nota do sistema com a nota teste.", question: "O ajuste resolveu?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "cliente_desktop_web" }] },
+                cliente_desktop_web: { question: "Qual o ambiente do cliente?", options: [{ label: "Desktop", next: "subindo_migrate_desktop" }, { label: "Web", next: "subindo_migrate_web" }] },
+                subindo_migrate_desktop: { question: "A nota sobe para a Migrate?", options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "verificar_versao_emissor" }] },
+                verificar_versao_emissor: { instruction: "Verifique a versão do emissor.", question: "Versão verificada?", options: [{ label: "Sim, Próximo", next: "refazer_pedido_zero_desktop" }] },
+                refazer_pedido_zero_desktop: { instruction: "Refaça o pedido do zero.", question: "Resolveu?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "versao_inferior_910" }] },
+                versao_inferior_910: { question: "Versão inferior a 9.10?", options: [{ label: "Sim", next: "passar_atualizador" }, { label: "Não", next: "reconfigurar_emissor_zero" }] },
+                passar_atualizador: { instruction: "Execute o atualizador de versões.", isEnd: true, type: "action", title: "Fim - Atualizar Versões" },
+                subindo_migrate_web: { question: "A nota sobe para a Migrate?", options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "refazer_pedido_zero_web" }] },
+                refazer_pedido_zero_web: { instruction: "Refaça o pedido do zero.", question: "Resolveu?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "reconfigurar_emissor_zero" }] },
+                reconfigurar_emissor_zero: { instruction: "Reconfigure as definições do emissor.", question: "Reconfigurado?", options: [{ label: "Sim, Próximo", next: "limpar_tabela_config" }] },
+                limpar_tabela_config: { instruction: "Apague os dados na softcom_modulo_configurações.", question: "A nota subiu?", options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "abrir_ticket_migrate" }] },
+                foi_autorizada: { question: "A nota foi autorizada?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não (Rejeitada)", next: "verificar_erro_exibe" }] },
+                verificar_erro_exibe: { instruction: "Analise o erro na base de soluções.", question: "Resolveu?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "abrir_ticket_migrate" }] },
+                abrir_ticket_migrate: { instruction: "Abra um ticket com a Migrate.", isEnd: true, type: "action", title: "Fim - Abrir Ticket" },
+                fim_sucesso: { instruction: "Excelente! O problema foi resolvido.", isEnd: true, type: "success", title: "Fim - Resolvido" }
             };
+
+            useEffect(() => {
+                fetchErrors();
+            }, []);
 
             const fetchErrors = async () => {
                 setLoading(true);
-                const { data, error } = await supabase.from('mapped_errors').select('*').order('created_at', { ascending: false });
-                if (data) setMappedErrors(data);
+                try {
+                    const { data } = await supabase.from('mapped_errors').select('*').order('created_at', { ascending: false });
+                    if (data) setMappedErrors(data);
+                } catch (e) { console.error(e); }
                 setLoading(false);
             };
 
-            useEffect(() => { fetchErrors(); }, []);
-
             const openEditModal = (item) => {
-                setEditErrorInput(item.erro);
-                setEditSolutionInput(item.solucao);
+                setEditErrorInput(item.erro || '');
+                setEditSolutionInput(item.solucao || '');
                 setEditingError(item);
             };
 
             const handleUpdateError = async (e) => {
                 e.preventDefault();
                 setSaveStatus('loading');
-                const { error } = await supabase.from('mapped_errors').update({ 
-                    erro: editErrorInput, 
-                    solucao: editSolutionInput 
-                }).eq('id', editingError.id);
-                
-                if (error) {
-                    setSaveStatus('error');
-                } else {
+                try {
+                    const { error } = await supabase.from('mapped_errors').update({ erro: editErrorInput, solucao: editSolutionInput }).eq('id', editingError.id);
+                    if (error) throw error;
+                    setMappedErrors(prev => prev.map(item => item.id === editingError.id ? { ...item, erro: editErrorInput, solucao: editSolutionInput } : item));
+                    if (selectedError?.id === editingError.id) setSelectedError({ ...selectedError, erro: editErrorInput, solucao: editSolutionInput });
                     setSaveStatus('success');
-                    fetchErrors();
-                    setTimeout(() => {
-                        setSaveStatus(null);
-                        setEditingError(null);
-                        if(selectedError && selectedError.id === editingError.id) {
-                            setSelectedError({...selectedError, erro: editErrorInput, solucao: editSolutionInput});
-                        }
-                    }, 1000);
-                }
+                    setTimeout(() => { setSaveStatus(null); setEditingError(null); }, 1000);
+                } catch (err) { setSaveStatus('error'); }
             };
 
             const handleSaveError = async (e) => {
                 e.preventDefault();
                 setSaveStatus('loading');
-                const { error } = await supabase.from('mapped_errors').insert([{ erro: errorInput, solucao: solutionInput }]);
-                if (error) setSaveStatus('error');
-                else {
+                try {
+                    const { error } = await supabase.from('mapped_errors').insert([{ erro: errorInput, solucao: solutionInput }]);
+                    if (error) throw error;
                     setSaveStatus('success');
                     setErrorInput(''); setSolutionInput('');
                     fetchErrors();
                     setTimeout(() => { setSaveStatus(null); setView('erros_mapeados'); }, 1500);
-                }
+                } catch (err) { setSaveStatus('error'); }
             };
 
-            const deleteError = async (id) => {
-                if (!confirm("Remover permanentemente esta solução?")) return;
-                await supabase.from('mapped_errors').delete().eq('id', id);
-                fetchErrors();
+            const handleConfirmDelete = async () => {
+                try {
+                    await supabase.from('mapped_errors').delete().eq('id', itemToDelete.id);
+                    setMappedErrors(prev => prev.filter(item => item.id !== itemToDelete.id));
+                    setItemToDelete(null);
+                } catch (e) { console.error(e); }
             };
-
-            const filteredErrors = useMemo(() => {
-                if (!searchQuery) return mappedErrors;
-                const q = searchQuery.toLowerCase();
-                return mappedErrors.filter(e => e.erro.toLowerCase().includes(q) || e.solucao.toLowerCase().includes(q));
-            }, [mappedErrors, searchQuery]);
 
             const copyToClipboard = (text, key) => {
                 const textArea = document.createElement("textarea");
@@ -297,211 +224,307 @@
                 setTimeout(() => setCopyStatus(prev => ({ ...prev, [key]: false })), 2000);
             };
 
+            const generateTicketText = () => {
+                const hora = new Date().getHours();
+                const saudacao = hora < 12 ? 'Bom dia' : 'Boa tarde';
+                let text = `Assunto: ${ticketData.empresa}\n\n${saudacao},\n\n`;
+                text += `Encaminhamos este chamado referente a uma falha na emissão de notas para este contribuinte.\n\n`;
+                text += `**Dados do Emitente:**\n* Empresa: ${ticketData.empresa}\n* CNPJ: ${ticketData.cnpj}\n* Município: ${ticketData.cidade}\n\n`;
+                text += `**Descrição do Incidente:**\n* Erro: ${ticketData.mensagemErro}\n* Ambiente: ${ticketData.ambiente || 'Não informado'}\n\n`;
+                text += `**Ações Realizadas:**\n${ticketData.detalhes || 'Análise inicial concluída sem resolução.'}\n\nSolicitamos análise técnica complementar.`;
+                setGeneratedTicketText(text);
+            };
+
+            const filteredErrors = useMemo(() => {
+                const q = searchQuery.toLowerCase();
+                return mappedErrors.filter(e => e.erro?.toLowerCase().includes(q) || e.solucao?.toLowerCase().includes(q));
+            }, [mappedErrors, searchQuery]);
+
+            const handleBack = () => {
+                if (flowHistory.length === 0) return;
+                const newHistory = [...flowHistory];
+                const lastStep = newHistory.pop();
+                setFlowHistory(newHistory);
+                setCurrentStep(lastStep);
+            };
+
+            const credenciais = [
+                { portal: "Invoicy", user: "renato.rodrigues@softcomtecnologia.com.br", pass: "Softcom12" },
+                { portal: "Migrate", user: "suporte.nfse.softcom@gmail.com", pass: "Sfc@3321" }
+            ];
+
             return (
-                <div className="min-h-screen flex flex-col bg-slate-100 font-sans antialiased">
-                    <header className="bg-[#2d3e50] text-white shadow-lg p-4 px-6 flex items-center justify-between border-b-4 border-[#f59e0b] sticky top-0 z-[60]">
+                <div className="min-h-screen flex flex-col transition-colors duration-300">
+                    <header className="bg-softcom-dark dark:bg-slate-900 text-white shadow-md p-3 px-6 flex items-center justify-between border-b-2 border-softcom-orange sticky top-0 z-[60]">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
-                                {menuOpen ? <IconX /> : <IconMenu />}
+                            <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-slate-700 rounded-lg transition-colors focus:outline-none">
+                                <IconMenu />
                             </button>
                             <SoftcomLogo />
                         </div>
-                        <div className="hidden md:flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                            <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none tracking-tighter">Database Cloud</span>
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg bg-slate-700/50 text-amber-400 hover:bg-slate-700 transition-all">
+                                {darkMode ? <IconSun /> : <IconMoon />}
+                            </button>
+                            <div className="hidden sm:flex items-center gap-2 border-l border-slate-700 pl-4 h-6">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Cloud Online</span>
+                            </div>
                         </div>
                     </header>
 
-                    <div className={`fixed inset-y-0 left-0 w-64 bg-[#2d3e50] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-r border-slate-700 pt-24 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                        <nav className="p-4 flex flex-col gap-2">
-                            <button onClick={() => { setView('analise'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'analise' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconHelp /> ASSISTENTE NFSE
-                            </button>
-                            <button onClick={() => { setView('erros_mapeados'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'erros_mapeados' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconSearch /> BASE DE SOLUÇÕES
-                            </button>
-                            <button onClick={() => { setView('mapear_erro'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'mapear_erro' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconPlus /> MAPEAR ERRO
-                            </button>
-                            <button onClick={() => { setView('links'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'links' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconExternalLink /> LINKS ÚTEIS
-                            </button>
-                            <div className="my-2 border-t border-slate-700"></div>
-                            <button onClick={() => { setView('especialista'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'especialista' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconShield /> SETOR ESPECIALISTA
-                            </button>
+                    {/* Menu Lateral */}
+                    <div className={`fixed inset-y-0 left-0 w-64 bg-softcom-dark dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out pt-20 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <nav className="p-4 flex flex-col gap-1">
+                            {[
+                                { id: 'erros_mapeados', label: 'Base de Soluções', icon: <IconSearch /> },
+                                { id: 'analise', label: 'Assistente NFS-e', icon: <IconHelp /> },
+                                { id: 'ticket_generator', label: 'Gerador de Ticket', icon: <IconTicket /> },
+                                { id: 'mapear_erro', label: 'Mapear Novo Erro', icon: <IconPlus /> },
+                                { id: 'links', label: 'Links Úteis', icon: <IconExternalLink /> },
+                                { id: 'especialista', label: 'Área Especialista', icon: <IconShield /> }
+                            ].map(item => (
+                                <button key={item.id} onClick={() => { setView(item.id); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-all ${view === item.id ? 'bg-softcom-orange text-softcom-dark shadow-lg shadow-orange-900/20' : 'text-slate-300 hover:bg-slate-800'}`}>
+                                    {item.icon} {item.label}
+                                </button>
+                            ))}
                         </nav>
                     </div>
 
-                    {menuOpen && <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40" onClick={() => setMenuOpen(false)}></div>}
+                    {menuOpen && <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] z-40" onClick={() => setMenuOpen(false)}></div>}
 
-                    <main className="max-w-6xl mx-auto w-full p-4 md:p-8 flex-1 flex flex-col">
+                    <main className="max-w-7xl mx-auto w-full p-4 sm:p-6 md:p-10 flex-1 flex flex-col">
                         
-                        {view === 'analise' && (
-                            <div className="animate-fadeIn max-w-2xl mx-auto w-full space-y-8">
-                                <div className="text-center">
-                                    <h1 className="text-3xl font-black text-slate-800 italic uppercase leading-none tracking-tighter">Assistente NFSe</h1>
-                                    <p className="text-slate-500 font-medium italic uppercase text-[10px]">Diagnóstico Softcom</p>
-                                </div>
-                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[420px] flex flex-col">
-                                    <div className="h-2 bg-slate-100 w-full"><div className="h-full bg-[#f59e0b] transition-all duration-500" style={{ width: `${(flowHistory.length / 14) * 100}%` }}></div></div>
-                                    <div className="p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center">
-                                        {flowchart[currentStep].instruction && (
-                                            <div className="bg-amber-50 border-l-4 border-[#f59e0b] p-6 rounded-r-xl w-full mb-8 text-left animate-fadeIn">
-                                                <h3 className="text-amber-800 font-black uppercase text-[10px] mb-1 tracking-widest italic leading-none">Ação Requerida:</h3>
-                                                <p className="text-slate-700 text-lg font-bold leading-tight">{flowchart[currentStep].instruction}</p>
-                                            </div>
-                                        )}
-                                        {!flowchart[currentStep].isEnd ? (
-                                            <div className="space-y-8 w-full animate-fadeIn">
-                                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 italic uppercase leading-tight tracking-tighter">{flowchart[currentStep].question}</h2>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                    {flowchart[currentStep].options.map((opt, i) => (
-                                                        <button key={i} onClick={() => { setFlowHistory([...flowHistory, currentStep]); setCurrentStep(opt.next); }} className="group flex items-center justify-between p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl hover:border-[#f59e0b] hover:bg-amber-50 transition-all text-left">
-                                                            <span className="text-lg font-bold text-[#2d3e50] group-hover:text-amber-900 leading-tight">{opt.label}</span>
-                                                            <div className="bg-white p-2 rounded-full shadow-sm group-hover:bg-[#f59e0b] transition-colors"><IconArrowRight /></div>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="animate-fadeIn flex flex-col items-center text-center space-y-6">
-                                                <div className={`p-8 rounded-full ${flowchart[currentStep].type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-[#2d3e50]'} border-4 border-white shadow-xl`}>
-                                                    {flowchart[currentStep].type === 'success' ? <IconCheck /> : <IconShield />}
-                                                </div>
-                                                <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">{flowchart[currentStep].title}</h2>
-                                                <button onClick={() => { setFlowHistory([]); setCurrentStep('inicio'); }} className="bg-slate-200 text-slate-600 px-10 py-4 rounded-full font-black hover:bg-slate-300 transition-all uppercase tracking-widest text-[10px]">Novo Diagnóstico</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="bg-slate-50 p-4 border-t flex justify-between px-8 text-[10px] font-black uppercase tracking-widest">
-                                        <button onClick={() => { if(flowHistory.length > 0) { const prev = flowHistory[flowHistory.length - 1]; setFlowHistory(flowHistory.slice(0, -1)); setCurrentStep(prev); } }} disabled={flowHistory.length === 0} className="text-slate-400 disabled:opacity-0 hover:text-slate-600 flex items-center gap-1">← Voltar</button>
-                                        <button onClick={() => { setFlowHistory([]); setCurrentStep('inicio'); }} className="text-slate-400 hover:text-red-500">Reiniciar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         {view === 'erros_mapeados' && (
                             <div className="animate-fadeIn w-full space-y-8">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconSearch /></div>
-                                        <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Base de Soluções</h2>
+                                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                                    <div className="space-y-1">
+                                        <h2 className="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">Base de Conhecimento</h2>
+                                        <p className="text-sm text-slate-500">Soluções rápidas para rejeições e erros comuns.</p>
                                     </div>
-                                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Pesquisar..." className="w-full max-w-md px-6 py-4 bg-white border-2 border-slate-200 rounded-2xl outline-none focus:border-[#f59e0b] font-bold shadow-sm" />
+                                    <div className="relative w-full max-w-sm">
+                                        <div className="absolute inset-y-0 left-3 flex items-center text-slate-400 pointer-events-none">
+                                            <IconSearch />
+                                        </div>
+                                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Pesquisar..." className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-softcom-orange/20 focus:border-softcom-orange font-medium text-sm transition-all" />
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredErrors.map((item) => (
-                                        <div key={item.id} className="bg-white rounded-[2.5rem] shadow-md border-2 border-transparent hover:border-[#f59e0b] transition-all p-6 flex flex-col group h-full cursor-pointer" onClick={() => setSelectedError(item)}>
-                                            <div className="flex justify-between mb-4">
-                                                <div className="bg-slate-50 p-2.5 rounded-xl text-[#2d3e50] group-hover:bg-[#f59e0b]/10 group-hover:text-[#f59e0b] transition-colors"><IconFileText /></div>
-                                                <div className="flex gap-2">
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); openEditModal(item); }} 
-                                                        className="text-slate-400 hover:text-[#f59e0b] p-2 bg-slate-50 rounded-lg hover:bg-amber-50 transition-all"
-                                                    >
-                                                        <IconEdit />
-                                                    </button>
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); deleteError(item.id); }} 
-                                                        className="text-slate-400 hover:text-red-500 p-2 bg-slate-50 rounded-lg hover:bg-red-50 transition-all"
-                                                    >
-                                                        <IconTrash />
-                                                    </button>
+                                
+                                {loading ? (
+                                    <div className="flex-1 flex flex-col items-center justify-center py-32 space-y-4">
+                                        <div className="w-8 h-8 border-2 border-t-softcom-orange border-slate-200 rounded-full animate-spin"></div>
+                                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Sincronizando com a base...</span>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                                        {filteredErrors.length > 0 ? filteredErrors.map((item) => (
+                                            <div key={item.id} className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-200/60 dark:border-slate-800 hover:border-softcom-orange hover:shadow-xl hover:shadow-orange-500/5 p-5 flex flex-col group cursor-pointer transition-all active:scale-[0.98]" onClick={() => setSelectedError(item)}>
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl text-slate-400 group-hover:bg-amber-50 group-hover:text-softcom-orange transition-colors"><IconFileText /></div>
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={(e) => { e.stopPropagation(); openEditModal(item); }} className="text-slate-400 hover:text-softcom-orange p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"><IconEdit /></button>
+                                                        <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item); }} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"><IconTrash /></button>
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-slate-800 dark:text-slate-200 font-semibold text-[15px] italic mb-6 line-clamp-3 leading-relaxed border-l-[3px] border-slate-100 dark:border-slate-800 group-hover:border-softcom-orange pl-4 transition-all">{item.erro}</h3>
+                                                <div className="mt-auto pt-4 border-t border-slate-50 dark:border-slate-800/50 flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold text-softcom-orange tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">Consultar</span>
+                                                    <div className="text-slate-300 group-hover:text-softcom-orange transition-colors"><IconArrowRight /></div>
                                                 </div>
                                             </div>
-                                            <h3 className="text-[#2d3e50] font-black uppercase text-xs italic tracking-tight mb-4 line-clamp-3 border-l-4 border-slate-100 group-hover:border-[#f59e0b] pl-3 leading-tight transition-all">
-                                                {item.erro}
-                                            </h3>
-                                            <div className="mt-auto pt-4 border-t text-[10px] font-black text-[#f59e0b] uppercase tracking-widest flex items-center justify-between">
-                                                <span>Ver Solução Completa</span>
-                                                <IconArrowRight />
+                                        )) : (
+                                            <div className="col-span-full py-20 text-center space-y-3">
+                                                <div className="text-slate-300 dark:text-slate-700 flex justify-center"><IconSearch /></div>
+                                                <p className="text-slate-400 font-medium">Nenhum resultado para "{searchQuery}"</p>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {view === 'mapear_erro' && (
-                            <div className="animate-fadeIn max-w-2xl mx-auto w-full">
-                                <div className="mb-8 flex items-center gap-4">
-                                    <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconPlus /></div>
-                                    <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Mapear Novo Erro</h2>
-                                </div>
-                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 md:p-10">
-                                    <form onSubmit={handleSaveError} className="space-y-8">
-                                        <div>
-                                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-3 leading-none tracking-widest">Rejeição Detectada</label>
-                                            <textarea required rows="3" value={errorInput} onChange={(e) => setErrorInput(e.target.value)} placeholder="Cole aqui a mensagem de erro..." className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#f59e0b] transition-all font-bold text-slate-700" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-3 leading-none tracking-widest">Solução Técnica</label>
-                                            <textarea required rows="8" value={solutionInput} onChange={(e) => setSolutionInput(e.target.value)} placeholder="Descreva o passo a passo da correção..." className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#f59e0b] transition-all font-bold text-slate-700" />
-                                        </div>
-                                        <button type="submit" disabled={saveStatus === 'loading'} className="w-full bg-[#2d3e50] text-white font-black py-6 rounded-2xl hover:bg-slate-800 transition-all uppercase tracking-widest shadow-xl">
-                                            {saveStatus === 'loading' ? 'A PROCESSAR...' : 'GRAVAR SOLUÇÃO'}
-                                        </button>
-                                    </form>
-                                </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {view === 'links' && (
                             <div className="animate-fadeIn w-full space-y-8">
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconExternalLink /></div>
-                                    <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none tracking-tighter">Links & Portais Úteis</h2>
+                                <div className="space-y-1">
+                                    <h2 className="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">Recursos Externos</h2>
+                                    <p className="text-sm text-slate-500">Ferramentas de apoio para suporte avançado.</p>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {linksUteis.map((link, idx) => (
-                                        <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-[2rem] shadow-md border-2 border-transparent hover:border-[#f59e0b] transition-all group flex items-center justify-between h-32">
-                                            <div className="flex items-center gap-5">
-                                                <div className="bg-slate-50 p-5 rounded-2xl text-slate-400 group-hover:bg-[#f59e0b] group-hover:text-[#2d3e50] transition-all shadow-inner">{link.icon}</div>
-                                                <div>
-                                                    <h3 className="text-slate-800 font-black uppercase italic tracking-tighter text-lg leading-none mb-1">{link.title}</h3>
-                                                    <p className="text-slate-500 text-[10px] font-bold uppercase leading-none opacity-60">{link.desc}</p>
+                                        <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-softcom-orange hover:shadow-lg transition-all flex items-start justify-between group">
+                                            <div className="flex gap-5">
+                                                <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-400 group-hover:bg-amber-50 group-hover:text-softcom-orange transition-colors border border-slate-100 dark:border-slate-700 shadow-sm">
+                                                    {link.icon}
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <span className="text-slate-800 dark:text-slate-100 font-bold text-lg group-hover:text-softcom-orange transition-colors block">{link.title}</span>
+                                                    <p className="text-xs text-slate-500 leading-relaxed font-normal max-w-xs">{link.description}</p>
                                                 </div>
                                             </div>
-                                            <IconArrowRight />
+                                            <div className="p-2 text-slate-200 group-hover:text-softcom-orange transition-colors"><IconExternalLink /></div>
                                         </a>
                                     ))}
                                 </div>
                             </div>
                         )}
 
+                        {view === 'ticket_generator' && (
+                            <div className="animate-fadeIn grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                                <div className="bg-white dark:bg-slate-900 p-8 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+                                    <h2 className="text-xl font-bold dark:text-white text-slate-800">Padronização de Ticket</h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Empresa</label>
+                                            <input value={ticketData.empresa} onChange={e => setTicketData({...ticketData, empresa: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl outline-none focus:border-softcom-orange text-sm font-medium transition-colors" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">CNPJ</label>
+                                            <input value={ticketData.cnpj} onChange={e => setTicketData({...ticketData, cnpj: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl outline-none focus:border-softcom-orange text-sm font-medium transition-colors" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Cidade / UF</label>
+                                            <input value={ticketData.cidade} onChange={e => setTicketData({...ticketData, cidade: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl outline-none focus:border-softcom-orange text-sm font-medium transition-colors" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Versão Ambiente</label>
+                                            <input value={ticketData.ambiente} onChange={e => setTicketData({...ticketData, ambiente: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl outline-none focus:border-softcom-orange text-sm font-medium transition-colors" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Rejeição / Mensagem Erro</label>
+                                        <textarea value={ticketData.mensagemErro} onChange={e => setTicketData({...ticketData, mensagemErro: e.target.value})} rows="2" className="w-full p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl outline-none focus:border-softcom-orange text-sm font-medium transition-colors resize-none" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Ações Realizadas</label>
+                                        <textarea value={ticketData.detalhes} onChange={e => setTicketData({...ticketData, detalhes: e.target.value})} rows="3" className="w-full p-3 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-xl outline-none focus:border-softcom-orange text-sm font-medium transition-colors resize-none" />
+                                    </div>
+                                    <button onClick={generateTicketText} className="w-full bg-softcom-dark dark:bg-slate-800 text-white p-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:shadow-xl hover:shadow-slate-900/10 active:scale-[0.98] transition-all">Formatar Texto</button>
+                                </div>
+                                
+                                <div className="bg-slate-100 dark:bg-slate-900/50 p-8 rounded-[24px] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col min-h-[480px]">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Cópia do Chamado</span>
+                                        {generatedTicketText && (
+                                            <button onClick={() => copyToClipboard(generatedTicketText, 't_copy')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase transition-all shadow-sm ${copyStatus['t_copy'] ? 'bg-emerald-500 text-white' : 'bg-softcom-orange text-softcom-dark hover:bg-amber-500'}`}>
+                                                {copyStatus['t_copy'] ? "Copiado!" : <><IconClipboard size={14} /> Copiar</>}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 font-mono text-xs leading-relaxed dark:text-slate-300 whitespace-pre-wrap select-all overflow-y-auto custom-scrollbar">
+                                        {generatedTicketText || <div className="h-full flex items-center justify-center text-slate-400 italic">O texto formatado será exibido aqui...</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'mapear_erro' && (
+                            <div className="animate-fadeIn max-w-2xl mx-auto w-full flex flex-col items-center">
+                                <div className="text-center mb-8 space-y-2">
+                                    <h2 className="text-2xl font-bold dark:text-white text-slate-800">Contribuir com a Base</h2>
+                                    <p className="text-sm text-slate-500">Registe novos erros para ajudar a equipa.</p>
+                                </div>
+                                <div className="bg-white dark:bg-slate-900 rounded-[28px] p-8 sm:p-10 border border-slate-200 dark:border-slate-800 shadow-xl w-full">
+                                    <form onSubmit={handleSaveError} className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-2">Título do Erro / Rejeição</label>
+                                            <textarea required rows="2" value={errorInput} onChange={(e) => setErrorInput(e.target.value)} placeholder="Ex: Rejeição 203: Código de serviço inexistente" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-2xl focus:border-softcom-orange outline-none font-medium text-sm transition-all resize-none" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-2">Resolução</label>
+                                            <textarea required rows="6" value={solutionInput} onChange={(e) => setSolutionInput(e.target.value)} placeholder="Passo a passo detalhado para resolver..." className="w-full p-4 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-2xl focus:border-softcom-orange outline-none font-medium text-sm transition-all resize-none" />
+                                        </div>
+                                        <button type="submit" disabled={saveStatus === 'loading'} className="w-full bg-softcom-dark text-white p-5 rounded-2xl font-bold text-xs uppercase tracking-widest hover:shadow-2xl transition-all disabled:opacity-50">
+                                            {saveStatus === 'loading' ? 'A Sincronizar...' : 'Publicar na Base Cloud'}
+                                        </button>
+                                        {saveStatus === 'success' && <p className="text-emerald-500 text-center font-bold text-[10px] uppercase animate-pulse">Solução registada com sucesso!</p>}
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {view === 'analise' && (
+                            <div className="animate-fadeIn max-w-2xl mx-auto w-full flex flex-col items-center flex-1 justify-center">
+                                <div className="w-full space-y-8 py-10">
+                                    <div className="text-center space-y-2">
+                                        <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Fluxo de Diagnóstico</h1>
+                                        <p className="text-sm text-slate-500 italic">Siga os passos para identificar a causa raiz.</p>
+                                    </div>
+                                    
+                                    <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-xl border dark:border-slate-800 overflow-hidden flex flex-col min-h-[420px]">
+                                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800">
+                                            <div className="h-full bg-softcom-orange transition-all duration-500" style={{ width: `${Math.min(100, (flowHistory.length / 8) * 100)}%` }}></div>
+                                        </div>
+                                        
+                                        <div className="p-10 flex-1 flex flex-col justify-center items-center">
+                                            {flowchart[currentStep].instruction && (
+                                                <div className="bg-amber-50 dark:bg-amber-900/10 border-l-4 border-softcom-orange p-5 rounded-r-2xl text-sm font-medium mb-8 w-full flex gap-4 items-center">
+                                                    <div className="text-softcom-orange shrink-0"><IconHelp /></div>
+                                                    <p className="text-amber-800 dark:text-amber-200 leading-relaxed">{flowchart[currentStep].instruction}</p>
+                                                </div>
+                                            )}
+                                            
+                                            <h2 className="text-xl font-medium mb-10 text-center leading-relaxed dark:text-slate-100 max-w-md">{flowchart[currentStep].question}</h2>
+                                            
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
+                                                {flowchart[currentStep].options?.map((opt, i) => (
+                                                    <button key={i} onClick={() => { setFlowHistory([...flowHistory, currentStep]); setCurrentStep(opt.next); }} className="p-5 bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-softcom-orange hover:bg-white dark:hover:bg-slate-700 rounded-2xl font-bold text-sm transition-all shadow-sm active:scale-95">
+                                                        {opt.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {flowchart[currentStep].isEnd && (
+                                                <div className="space-y-6 pt-4 text-center">
+                                                    <div className="text-emerald-500 font-bold text-3xl uppercase italic tracking-tighter">{flowchart[currentStep].title}</div>
+                                                    <button onClick={() => { setFlowHistory([]); setCurrentStep('inicio'); }} className="px-10 py-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-slate-200 transition-all">Reiniciar Processo</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {!flowchart[currentStep].isEnd && flowHistory.length > 0 && (
+                                            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 flex justify-center border-t border-slate-100 dark:border-slate-800">
+                                                <button onClick={handleBack} className="text-slate-400 hover:text-softcom-dark dark:hover:text-white transition-colors text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6"/></svg> Voltar
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {view === 'especialista' && (
-                            <div className="animate-fadeIn flex justify-center w-full">
+                            <div className="animate-fadeIn flex flex-col items-center justify-center flex-1 py-10">
                                 {!isEspecialistaAuthed ? (
-                                    <div className="bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-200 w-full max-w-sm text-center">
-                                        <div className="mb-8 flex justify-center"><div className="bg-slate-50 p-10 rounded-full text-[#f59e0b] shadow-inner"><IconShield /></div></div>
-                                        <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-10 leading-none">Acesso Especialista</h2>
-                                        <input type="password" maxLength="4" value={pinInput} onChange={(e) => { setPinInput(e.target.value); if(e.target.value === '7711') setIsEspecialistaAuthed(true); }} placeholder="PIN" className="w-full text-center text-5xl p-6 bg-slate-50 border-2 rounded-2xl outline-none border-slate-200 focus:border-[#f59e0b] tracking-[0.4em] font-black" autoFocus />
+                                    <div className="bg-white dark:bg-slate-900 p-12 rounded-[32px] border dark:border-slate-800 w-full max-w-sm text-center shadow-2xl">
+                                        <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6 text-softcom-orange"><IconShield /></div>
+                                        <h2 className="text-xl font-bold mb-8">Credenciais Restritas</h2>
+                                        <input type="password" maxLength="4" value={pinInput} onChange={(e) => { setPinInput(e.target.value); if(e.target.value === '7711') setIsEspecialistaAuthed(true); }} placeholder="PIN" className="w-full text-center text-5xl p-5 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:border-softcom-orange tracking-[0.6em] font-bold transition-all shadow-inner" autoFocus />
+                                        <p className="text-[10px] text-slate-400 mt-6 font-bold uppercase tracking-widest">Acesso apenas para setor nível 2</p>
                                     </div>
                                 ) : (
-                                    <div className="w-full space-y-10 animate-fadeIn">
-                                        <div className="flex items-center gap-4">
-                                            <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg"><IconShield /></div>
-                                            <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none tracking-tighter">Credenciais do Setor</h2>
+                                    <div className="w-full space-y-8 animate-fadeIn">
+                                        <div className="text-center space-y-2">
+                                            <h2 className="text-2xl font-bold">Base de Credenciais</h2>
+                                            <p className="text-sm text-slate-500 uppercase font-black text-[10px] tracking-widest text-emerald-500">Acesso Autorizado</p>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {credenciais.map((c, i) => (
-                                                <div key={i} className="bg-white p-10 rounded-[2.5rem] shadow-xl border-t-[10px] border-[#f59e0b] flex flex-col gap-6">
-                                                    <h3 className="text-slate-800 font-black uppercase italic tracking-tighter text-2xl mb-2">{c.portal}</h3>
+                                                <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[28px] border-t-4 border-softcom-orange shadow-lg transition-all hover:shadow-xl">
+                                                    <h3 className="font-bold text-xl mb-6 tracking-tight dark:text-slate-100">{c.portal}</h3>
                                                     <div className="space-y-5">
-                                                        <div>
-                                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2 leading-none">Email / Utilizador</p>
-                                                            <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                                                                <span className="font-bold text-slate-600 truncate mr-4">{c.user}</span>
-                                                                <button onClick={() => copyToClipboard(c.user, `u_${i}`)} className={`p-3 rounded-xl transition-all ${copyStatus[`u_${i}`] ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><IconClipboard /></button>
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-widest ml-1">Utilizador</p>
+                                                            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl group border border-transparent hover:border-softcom-orange/20 transition-all">
+                                                                <span className="text-sm font-medium truncate mr-2 dark:text-slate-300 select-all">{c.user}</span>
+                                                                <button onClick={() => copyToClipboard(c.user, `u_${i}`)} className={`p-2 rounded-lg transition-all ${copyStatus[`u_${i}`] ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-300 hover:text-softcom-orange hover:bg-white'}`}><IconClipboard size={14}/></button>
                                                             </div>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2 leading-none">Password</p>
-                                                            <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                                                                <span className="font-mono font-bold text-slate-600">••••••••</span>
-                                                                <button onClick={() => copyToClipboard(c.pass, `p_${i}`)} className={`p-3 rounded-xl transition-all ${copyStatus[`p_${i}`] ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><IconClipboard /></button>
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-widest ml-1">Password</p>
+                                                            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl group border border-transparent hover:border-softcom-orange/20 transition-all">
+                                                                <span className="text-sm font-mono dark:text-slate-400 tracking-tighter select-all">••••••••</span>
+                                                                <button onClick={() => copyToClipboard(c.pass, `p_${i}`)} className={`p-2 rounded-lg transition-all ${copyStatus[`p_${i}`] ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-300 hover:text-softcom-orange hover:bg-white'}`}><IconClipboard size={14}/></button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -514,62 +537,80 @@
                         )}
                     </main>
 
-                    {/* --- TELINHA DE SOLUÇÃO (MODAL DE DETALHES) --- */}
+                    {/* --- MODAL DETALHES --- */}
                     {selectedError && (
-                        <div className="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn" onClick={() => setSelectedError(null)}>
-                            <div className="bg-white rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] w-full max-w-2xl p-8 md:p-14 relative animate-modalIn" onClick={e => e.stopPropagation()}>
-                                <button onClick={() => setSelectedError(null)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"><IconX /></button>
-                                <div className="mb-8">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
-                                        <span className="text-[#f59e0b] font-black uppercase text-[10px] tracking-[0.3em] leading-none">Conhecimento Mapeado</span>
+                        <div className="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn" onClick={() => setSelectedError(null)}>
+                            <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col relative animate-modalIn transition-all" onClick={e => e.stopPropagation()}>
+                                <div className="p-8 pb-4 flex justify-between items-start">
+                                    <h2 className="text-lg font-bold text-slate-800 dark:text-white italic leading-relaxed border-l-4 border-softcom-orange pl-4 pr-10">{selectedError.erro}</h2>
+                                    <button onClick={() => setSelectedError(null)} className="p-2 text-slate-400 hover:text-red-500 transition-colors shrink-0"><IconX /></button>
+                                </div>
+                                <div className="p-8 pt-2 overflow-y-auto custom-scrollbar flex-1">
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 mb-6 shadow-inner border dark:border-slate-800">
+                                        <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-medium text-base leading-relaxed">{selectedError.solucao}</p>
                                     </div>
-                                    <h2 className="text-2xl md:text-3xl font-black text-[#2d3e50] uppercase italic tracking-tighter leading-tight select-text">{selectedError.erro}</h2>
                                 </div>
-                                <div className="bg-slate-50 rounded-[2rem] p-6 md:p-8 border border-slate-100 mb-8 max-h-[40vh] overflow-y-auto custom-scrollbar">
-                                    <p className="text-slate-700 whitespace-pre-wrap font-bold text-lg md:text-xl leading-relaxed select-text">{selectedError.solucao}</p>
-                                </div>
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <button onClick={() => openEditModal(selectedError)} className="py-5 px-8 rounded-2xl bg-white border-2 border-slate-200 text-slate-400 hover:text-[#f59e0b] hover:border-[#f59e0b] transition-all shadow-sm"><IconEdit /></button>
-                                    <button onClick={() => copyToClipboard(selectedError.solucao, `modal_${selectedError.id}`)} className={`flex-1 py-5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl ${copyStatus[`modal_${selectedError.id}`] ? 'bg-emerald-500 text-white' : 'bg-[#2d3e50] text-white hover:bg-slate-800'}`}>
-                                        <IconClipboard width="18" height="18" />
-                                        {copyStatus[`modal_${selectedError.id}`] ? "COPIADO!" : "COPIAR SOLUÇÃO"}
+                                <div className="p-8 pt-0 flex gap-3">
+                                    <button onClick={() => openEditModal(selectedError)} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-softcom-orange hover:bg-white border border-transparent hover:border-softcom-orange transition-all"><IconEdit /></button>
+                                    <button onClick={() => copyToClipboard(selectedError.solucao, `m_${selectedError.id}`)} className={`flex-1 p-5 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-[0.98] ${copyStatus[`m_${selectedError.id}`] ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/20' : 'bg-softcom-dark text-white hover:bg-slate-800 shadow-xl shadow-slate-900/10'}`}>
+                                        <IconClipboard size={18} /> {copyStatus[`m_${selectedError.id}`] ? "Solução Copiada!" : "Copiar Solução Técnica"}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* --- MODAL DE EDIÇÃO --- */}
+                    {/* MODAL EDIÇÃO */}
                     {editingError && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-fadeIn">
-                            <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-modalIn" onClick={e => e.stopPropagation()}>
-                                <div className="bg-[#2d3e50] p-8 border-b-4 border-[#f59e0b] flex justify-between items-center text-white">
-                                    <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none">Editar Mapeamento</h3>
-                                    <button onClick={() => setEditingError(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><IconX /></button>
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+                            <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[32px] shadow-2xl overflow-hidden animate-modalIn" onClick={e => e.stopPropagation()}>
+                                <div className="bg-softcom-dark p-6 px-8 flex justify-between items-center text-white border-b-2 border-softcom-orange">
+                                    <div className="flex items-center gap-3">
+                                        <IconEdit />
+                                        <h3 className="font-bold text-xs uppercase tracking-[0.2em]">Modificar Registo</h3>
+                                    </div>
+                                    <button onClick={() => setEditingError(null)} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><IconX /></button>
                                 </div>
-                                <form onSubmit={handleUpdateError} className="p-10 space-y-6 bg-slate-50">
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest leading-none">Título / Erro</label>
-                                        <textarea required rows="3" value={editErrorInput} onChange={(e) => setEditErrorInput(e.target.value)} className="w-full p-5 bg-white border-2 border-slate-100 rounded-[1.5rem] outline-none focus:border-[#f59e0b] font-bold text-slate-700 shadow-sm" />
+                                <form onSubmit={handleUpdateError} className="p-8 sm:p-10 space-y-6">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-bold uppercase text-slate-400 tracking-widest ml-1">Erro</label>
+                                        <textarea required rows="2" value={editErrorInput} onChange={(e) => setEditErrorInput(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-2xl outline-none focus:border-softcom-orange text-sm font-medium dark:text-slate-200 transition-colors resize-none" />
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest leading-none">Instruções Técnicas</label>
-                                        <textarea required rows="8" value={editSolutionInput} onChange={(e) => setEditSolutionInput(e.target.value)} className="w-full p-5 bg-white border-2 border-slate-100 rounded-[1.5rem] outline-none focus:border-[#f59e0b] font-bold text-slate-700 shadow-sm" />
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-bold uppercase text-slate-400 tracking-widest ml-1">Solução</label>
+                                        <textarea required rows="5" value={editSolutionInput} onChange={(e) => setEditSolutionInput(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 rounded-2xl outline-none focus:border-softcom-orange text-sm font-medium dark:text-slate-200 transition-colors resize-none" />
                                     </div>
-                                    <div className="flex gap-4">
-                                        <button type="button" onClick={() => setEditingError(null)} className="flex-1 py-5 bg-slate-200 text-slate-600 font-black rounded-2xl uppercase text-xs tracking-widest transition-colors hover:bg-slate-300">Descartar</button>
-                                        <button type="submit" className="flex-[2] py-5 bg-[#f59e0b] text-[#2d3e50] font-black rounded-2xl uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all">
-                                            {saveStatus === 'loading' ? 'A SALVAR...' : 'SALVAR ALTERAÇÕES'}
-                                        </button>
+                                    <div className="flex gap-4 pt-4">
+                                        <button type="button" onClick={() => setEditingError(null)} className="flex-1 p-5 bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold rounded-2xl text-[10px] uppercase hover:bg-slate-200 transition-colors tracking-widest">Cancelar</button>
+                                        <button type="submit" className="flex-[2] p-5 bg-softcom-orange text-softcom-dark font-bold rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all">Salvar Alterações</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     )}
 
-                    <footer className="text-center p-8 text-slate-400 text-[10px] font-black uppercase italic tracking-widest leading-none tracking-tighter opacity-50">
-                        Softcom Tecnologia &copy; {new Date().getFullYear()} • Suporte NFSe Cloud
+                    {/* MODAL DELETE */}
+                    {itemToDelete && (
+                        <div className="fixed inset-0 z-[300] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+                            <div className="bg-white dark:bg-slate-900 rounded-[28px] p-10 text-center max-w-sm w-full animate-modalIn border-t-8 border-red-500 shadow-2xl">
+                                <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><IconTrash /></div>
+                                <h3 className="font-bold text-xl mb-3 dark:text-slate-100">Eliminar Mapeamento?</h3>
+                                <p className="text-sm text-slate-500 leading-relaxed mb-10 px-4">Esta ação é irreversível e removerá a solução de todos os utilizadores da rede.</p>
+                                <div className="flex flex-col gap-3">
+                                    <button onClick={handleConfirmDelete} className="w-full p-5 bg-red-600 text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-500/20">Sim, Eliminar Permanentemente</button>
+                                    <button onClick={() => setItemToDelete(null)} className="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-[10px] uppercase tracking-widest font-bold text-slate-500 hover:bg-slate-200 transition-colors">Não, Manter Registo</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="w-full max-w-7xl mx-auto px-10 pb-10 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em] opacity-60 transition-colors">
+                        <span>Softcom Tecnologia &copy; {new Date().getFullYear()}</span>
+                        <div className="flex gap-4">
+                            <span>Assistente NFS-e Cloud</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>v2.5.0</span>
+                        </div>
                     </footer>
                 </div>
             );
