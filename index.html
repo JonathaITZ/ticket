@@ -27,6 +27,9 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- PapaParse para ler CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -99,6 +102,10 @@
         const IconMenu = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
         const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
         const IconVideo = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>;
+        const IconTicket = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>;
+        const IconServer = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>;
+        const IconCloudUpload = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+        const IconBuilding = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="22"/><line x1="15" y1="22" x2="15" y2="22"/><line x1="12" y1="22" x2="12" y2="22"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="4" y1="16" x2="20" y2="16"/></svg>;
 
         const SoftcomLogo = ({ size = "45" }) => (
             <div className="flex items-center gap-2">
@@ -136,6 +143,22 @@
             
             const [isEspecialistaAuthed, setIsEspecialistaAuthed] = useState(false);
             const [pinInput, setPinInput] = useState('');
+            const [ticketStatus, setTicketStatus] = useState(null); // null, 'loading', 'success', 'error'
+            
+            const [municipios, setMunicipios] = useState([]);
+            const [searchMun, setSearchMun] = useState('');
+            const [loadingMun, setLoadingMun] = useState(false);
+            
+            // Novos estados para carga CSV local
+            const [municipiosTemp, setMunicipiosTemp] = useState([]);
+            const [filtroMunicipio, setFiltroMunicipio] = useState('');
+            const [syncStatus, setSyncStatus] = useState(null); // null, 'loading', 'success', 'error'
+            
+            // Estado do Formulário de Ticket
+            const [ticketData, setTicketData] = useState({
+                empresa: '', cnpj: '', municipio: '', ambiente: '', erro: '', descricao: '', ticketAntigo: '', acoes: ''
+            });
+            const [finalMessage, setFinalMessage] = useState('');
 
             const linksUteis = [
                 { title: "Portal Invoicy", url: "https://web.invoicy.com.br/", description: "Verificação técnica detalhada." },
@@ -232,6 +255,32 @@
                 fetchErrors();
             };
 
+            const fetchMunicipios = async (termo = '') => {
+                setLoadingMun(true);
+                try {
+                    let query = supabase.from('municipios').select('*');
+                    if (termo) {
+                        // Tenta filtrar de forma genérica (pode falhar se o nome da coluna no banco for diferente)
+                        // O ideal é que a coluna no banco seja "NomeMunicipio" ou "nome_municipio"
+                        query = query.ilike('NomeMunicipio', `%${termo}%`);
+                    }
+                    const { data, error } = await query.limit(100);
+                    
+                    if (error) {
+                        console.error("Erro Supabase:", error);
+                        // Tenta buscar com coluna em minúsculo se der erro na primeira tentativa
+                        if (termo) {
+                            const { data: dataLow } = await supabase.from('municipios').select('*').ilike('nomemunicipio', `%${termo}%`).limit(100);
+                            if (dataLow) setMunicipios(dataLow);
+                        }
+                    } else if (data) {
+                        console.log("Dados recebidos:", data);
+                        setMunicipios(data);
+                    }
+                } catch (e) { console.error("Exceção:", e); }
+                setLoadingMun(false);
+            };
+
             const filteredErrors = useMemo(() => {
                 if (!searchQuery) return mappedErrors;
                 const q = searchQuery.toLowerCase();
@@ -247,6 +296,86 @@
                 document.body.removeChild(textArea);
                 setCopyStatus(prev => ({ ...prev, [key]: true }));
                 setTimeout(() => setCopyStatus(prev => ({ ...prev, [key]: false })), 2000);
+            };
+
+            // Atualiza a mensagem final quando os dados do formulário mudam
+            useEffect(() => {
+                const texto = `Assunto: ${ticketData.erro.split('\n')[0] || 'Erro na Emissão'} - ${ticketData.empresa || 'CLIENTE'}\n
+Bom dia,\n
+Encaminhamos este chamado referente a uma falha na emissão de notas no ambiente ${ticketData.ambiente || '...'}.\n
+**Dados do Emitente:**
+* Empresa: ${ticketData.empresa || '...'}
+* CNPJ: ${ticketData.cnpj || '...'}
+* Município: ${ticketData.municipio || '...'}\n
+**Descrição:**
+O sistema retorna a mensagem: **${ticketData.erro || '...'}**.
+${ticketData.descricao || ''}\n
+Ações Realizadas: ${ticketData.acoes || 'Verificação de cadastro e schemas.'}
+${ticketData.ticketAntigo ? 'Ticket Anterior: ' + ticketData.ticketAntigo : ''}\n
+Não foi possível resolver internamente.`;
+                setFinalMessage(texto);
+            }, [ticketData]);
+
+            const handleGerarTicket = async () => {
+                const textoParaEnviar = finalMessage;
+
+                if (!textoParaEnviar.trim()) {
+                    alert("O campo de texto está vazio!");
+                    return;
+                }
+
+                setTicketStatus('loading');
+                try {
+                    // Exemplo: 'https://seulink.ngrok-free.app/abrir_migrate'
+                    const response = await fetch('http://localhost:5000/abrir_migrate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            empresa: ticketData.empresa || "GARAGE", 
+                            conteudo: textoParaEnviar
+                        })
+                    });
+                    const result = await response.json();
+                    setTicketStatus('success');
+                    alert(result.message || "Automação finalizada!");
+                } catch (error) {
+                    setTicketStatus('error');
+                    alert("Erro ao conectar com o servidor Python.");
+                    console.error(error);
+                } finally {
+                    setTimeout(() => setTicketStatus(null), 3000);
+                }
+            };
+
+            useEffect(() => {
+                if (view === 'verificacao') {
+                    fetchMunicipios(searchMun);
+                }
+            }, [view]); // Carrega ao entrar na aba
+
+            const handleSyncDatabase = async () => {
+                if (municipiosTemp.length === 0) return alert("Carregue um CSV primeiro.");
+                if (!confirm(`Deseja enviar ${municipiosTemp.length} registros para o banco de dados? Isso atualizará os dados existentes.`)) return;
+
+                setSyncStatus('loading');
+                try {
+                    const response = await fetch('http://localhost:5000/sincronizar_municipios', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ municipios: municipiosTemp })
+                    });
+                    const result = await response.json();
+                    if (response.ok) { setSyncStatus('success'); alert(result.message); }
+                    else { throw new Error(result.error); }
+                } catch (error) { setSyncStatus('error'); alert("Erro na sincronização: " + error.message); }
+                finally { setSyncStatus(null); }
+            };
+
+            // Função auxiliar para ler dados ignorando maiúsculas/minúsculas
+            const getVal = (obj, key) => {
+                if (!obj) return '';
+                // Tenta encontrar a chave exata ou em minúsculo
+                return obj[key] || obj[key.toLowerCase()] || obj[key.toUpperCase()] || '';
             };
 
             return (
@@ -267,6 +396,12 @@
                             </button>
                             <button onClick={() => { setView('analise'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'analise' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
                                 <IconHelp /> ASSISTENTE NFSE
+                            </button>
+                            <button onClick={() => { setView('verificacao'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'verificacao' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
+                                <IconServer /> VERIFICAÇÃO AMBIENTE
+                            </button>
+                            <button onClick={() => { setView('gerar_ticket'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'gerar_ticket' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
+                                <IconTicket /> GERAR TICKET
                             </button>
                             <button onClick={() => { setView('mapear_erro'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'mapear_erro' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
                                 <IconPlus /> MAPEAR ERRO
@@ -362,6 +497,159 @@
                                     <div className="bg-slate-50 p-4 border-t flex justify-between px-8 text-[10px] font-black uppercase tracking-widest">
                                         <button onClick={() => { if(flowHistory.length > 0) { const prev = flowHistory[flowHistory.length - 1]; setFlowHistory(flowHistory.slice(0, -1)); setCurrentStep(prev); } }} disabled={flowHistory.length === 0} className="text-slate-400 disabled:opacity-0 hover:text-slate-600 flex items-center gap-1">← Voltar</button>
                                         <button onClick={() => { setFlowHistory([]); setCurrentStep('inicio'); }} className="text-slate-400 hover:text-red-500">Reiniciar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'verificacao' && (
+                            <div className="animate-fadeIn w-full space-y-8">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconSearch /></div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Consultar Municípios</h2>
+                                            <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">Base de Dados Nacional</p>
+                                        </div>
+                                    </div>
+
+                                    <form onSubmit={(e) => { e.preventDefault(); fetchMunicipios(searchMun); }} className="flex gap-4 w-full md:w-auto">
+                                        <input 
+                                            type="text" 
+                                            value={searchMun}
+                                            onChange={(e) => setSearchMun(e.target.value)}
+                                            placeholder="Pesquisar cidade..." 
+                                            className="flex-1 px-6 py-3 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-[#f59e0b] text-slate-700 w-full md:w-80 shadow-sm"
+                                        />
+                                        <button type="submit" className="bg-[#2d3e50] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg">
+                                            Buscar
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {loadingMun ? (
+                                    <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div></div>
+                                ) : municipios.length > 0 ? (
+                                    <div className="bg-white rounded-[2.5rem] shadow-md border-2 border-slate-100 overflow-hidden">
+                                        <div className="overflow-y-auto max-h-[600px] custom-scrollbar">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
+                                                    <tr className="border-b-2 border-slate-100 bg-slate-50">
+                                                        <th className="p-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Região</th>
+                                                        <th className="p-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">UF</th>
+                                                        <th className="p-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Município</th>
+                                                        <th className="p-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">CNPJ</th>
+                                                        <th className="p-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Convênio</th>
+                                                        <th className="p-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Aderente Amb. Nac.</th>
+                                                        <th className="p-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aderente Emissor</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50">
+                                                    {municipios.map((mun, idx) => (
+                                                        <tr key={idx} className="hover:bg-amber-50/30 transition-colors">
+                                                            <td className="p-4 px-6 font-bold text-slate-500 text-xs">{getVal(mun, 'Regiao')}</td>
+                                                            <td className="p-4 px-6 font-black text-[#2d3e50]">{getVal(mun, 'UF')}</td>
+                                                            <td className="p-4 px-6 font-bold text-slate-600 text-sm">{getVal(mun, 'NomeMunicipio')}</td>
+                                                            <td className="p-4 px-6 font-mono text-xs text-slate-500">{getVal(mun, 'CNPJ')}</td>
+                                                            <td className="p-4 px-6">
+                                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${getVal(mun, 'StatusConvenioSEFIN') === 'Ativo' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                                    {getVal(mun, 'StatusConvenioSEFIN')}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 px-6">
+                                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${getVal(mun, 'AderenteAmbienteNacional') === 'Sim' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                                    {getVal(mun, 'AderenteAmbienteNacional')}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 px-6 text-right">
+                                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${getVal(mun, 'AderenteEmissorNacional') === 'Sim' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                                    {getVal(mun, 'AderenteEmissorNacional')}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 border-t flex justify-between items-center px-8">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                Mostrando {municipios.length} registros
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white rounded-[2.5rem] shadow-md border-2 border-slate-100 p-20 flex flex-col items-center justify-center text-center">
+                                        <div className="bg-slate-50 p-6 rounded-full text-slate-200 mb-6">
+                                            <IconServer />
+                                        </div>
+                                        <h3 className="text-slate-400 font-black uppercase text-sm tracking-widest">Nenhum município encontrado</h3>
+                                        <p className="text-slate-400 text-xs mt-2 max-w-md italic">
+                                            Utilize o campo de pesquisa acima para consultar a base de dados.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {view === 'gerar_ticket' && (
+                            <div className="animate-fadeIn w-full h-full flex flex-col gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconEdit /></div>
+                                    <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Automação de Ticket</h2>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                                    {/* Coluna Esquerda: Formulário */}
+                                    <div className="bg-white p-6 rounded-[2.5rem] shadow-md border border-slate-200 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+                                        <h3 className="text-[#2d3e50] font-black uppercase text-xs tracking-widest mb-2">Dados do Cliente</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="text" placeholder="Empresa / Razão Social" value={ticketData.empresa} onChange={e => setTicketData({...ticketData, empresa: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm" />
+                                            <input type="text" placeholder="CNPJ" value={ticketData.cnpj} onChange={e => setTicketData({...ticketData, cnpj: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="text" placeholder="Município/UF" value={ticketData.municipio} onChange={e => setTicketData({...ticketData, municipio: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm" />
+                                            <input type="text" placeholder="Ambiente (Ex: 2.03)" value={ticketData.ambiente} onChange={e => setTicketData({...ticketData, ambiente: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm" />
+                                        </div>
+                                        
+                                        <h3 className="text-[#2d3e50] font-black uppercase text-xs tracking-widest mt-2 mb-2">Detalhes do Erro</h3>
+                                        <textarea rows="2" placeholder="Mensagem de Erro (Título)" value={ticketData.erro} onChange={e => setTicketData({...ticketData, erro: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm resize-none"></textarea>
+                                        <textarea rows="3" placeholder="Descrição detalhada do problema..." value={ticketData.descricao} onChange={e => setTicketData({...ticketData, descricao: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm resize-none"></textarea>
+                                        
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="text" placeholder="Ações Realizadas" value={ticketData.acoes} onChange={e => setTicketData({...ticketData, acoes: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm" />
+                                            <input type="text" placeholder="Ticket Antigo (Opcional)" value={ticketData.ticketAntigo} onChange={e => setTicketData({...ticketData, ticketAntigo: e.target.value})} className="bg-slate-50 p-3 rounded-xl border border-slate-100 focus:border-[#f59e0b] outline-none font-bold text-slate-700 text-sm" />
+                                        </div>
+                                        
+                                        <button onClick={() => setTicketData({empresa: '', cnpj: '', municipio: '', ambiente: '', erro: '', descricao: '', ticketAntigo: '', acoes: ''})} className="mt-auto py-3 bg-slate-100 text-slate-400 font-bold rounded-xl uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-colors">Limpar Formulário</button>
+                                    </div>
+                                    
+                                    {/* Coluna Direita: Preview e Ação */}
+                                    <div className="flex flex-col bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
+                                        <div className="bg-[#2d3e50] p-4 px-6 flex justify-between items-center">
+                                            <span className="text-white text-[10px] font-black uppercase tracking-widest">Pré-visualização da Mensagem</span>
+                                            <span className="text-orange-400 text-[10px] font-bold uppercase">Editável</span>
+                                        </div>
+                                        
+                                        <textarea 
+                                            value={finalMessage} 
+                                            onChange={(e) => setFinalMessage(e.target.value)}
+                                            className="flex-1 p-6 font-mono text-sm whitespace-pre-wrap text-slate-600 outline-none focus:bg-slate-50 transition-colors resize-none"
+                                        ></textarea>
+                                    
+                                        <div className="p-6 bg-slate-50 border-t border-slate-100">
+                                            <button onClick={handleGerarTicket} disabled={ticketStatus === 'loading'} className={`w-full py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg transition-all flex items-center justify-center gap-3 ${ticketStatus === 'loading' ? 'bg-slate-300 text-slate-500 cursor-wait' : 'bg-[#2d3e50] text-white hover:bg-slate-800'}`}>
+                                                {ticketStatus === 'loading' ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></div>
+                                                        PROCESSANDO AUTOMAÇÃO...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <IconTicket /> GERAR TEXTO E ABRIR TICKET
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
