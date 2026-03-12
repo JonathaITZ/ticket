@@ -120,10 +120,8 @@
         );
 
         const App = () => {
-            const [view, setView] = useState('erros_mapeados');
+            const [view, setView] = useState('verificacao');
             const [menuOpen, setMenuOpen] = useState(false);
-            const [currentStep, setCurrentStep] = useState('inicio');
-            const [flowHistory, setFlowHistory] = useState([]);
             const [mappedErrors, setMappedErrors] = useState([]);
             const [searchQuery, setSearchQuery] = useState('');
             const [selectedError, setSelectedError] = useState(null);
@@ -150,6 +148,7 @@
             const [loadingMun, setLoadingMun] = useState(false);
             const [filtroAderentes, setFiltroAderentes] = useState(false);
             const [stats, setStats] = useState({ total: 0, aderentes: 0, naoAderentes: 0 });
+            const [animStats, setAnimStats] = useState({ total: 0, aderentes: 0, naoAderentes: 0, pct: 0 });
             
             // Novos estados para carga CSV local
             const [municipiosTemp, setMunicipiosTemp] = useState([]);
@@ -174,26 +173,6 @@
                 { portal: "Invoicy", user: "renato.rodrigues@softcomtecnologia.com.br", pass: "Softcom12" },
                 { portal: "Migrate", user: "suporte.nfse.softcom@gmail.com", pass: "Sfc@3321" }
             ];
-
-            const flowchart = {
-                inicio: { question: "O cliente já emite NFS-e pelo sistema?", options: [{ label: "Sim", next: "cliente_desktop_web" }, { label: "Não", next: "solicitar_xml_pdf" }] },
-                solicitar_xml_pdf: { instruction: "Peça ao cliente o XML de uma nota teste e o PDF emitido este ano na prefeitura.", question: "Arquivos recebidos?", options: [{ label: "Sim", next: "comparar_dados" }, { label: "Não", next: "solicitar_xml_pdf" }] },
-                comparar_dados: { instruction: "Compare os dados da nota do sistema com a nota teste e iguale os dados do serviço.", question: "O ajuste resolveu o problema?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "cliente_desktop_web" }] },
-                cliente_desktop_web: { question: "Qual o ambiente do cliente?", options: [{ label: "Desktop", next: "subindo_migrate_desktop" }, { label: "Web", next: "subindo_migrate_web" }] },
-                subindo_migrate_desktop: { question: "A nota está a subir para o monitor da Migrate?", options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "verificar_versao_emissor" }] },
-                verificar_versao_emissor: { instruction: "Verifique a versão do emissor de notas e valide se está atualizado.", question: "Versão verificada?", options: [{ label: "Sim, Próximo", next: "refazer_pedido_zero_desktop" }] },
-                refazer_pedido_zero_desktop: { instruction: "Refaça o pedido do zero no sistema e tente emitir a nota novamente.", question: "Resolveu o problema?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "versao_inferior_910" }] },
-                versao_inferior_910: { question: "A versão do sistema é inferior a 9.10?", options: [{ label: "Sim", next: "passar_atualizador" }, { label: "Não", next: "reconfigurar_emissor_zero" }] },
-                passar_atualizador: { instruction: "Execute o atualizador de versões no sistema do cliente.", isEnd: true, type: "action", title: "Fim - Atualizar Versões" },
-                subindo_migrate_web: { question: "A nota está a subir para o monitor da Migrate?", options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "refazer_pedido_zero_web" }] },
-                refazer_pedido_zero_web: { instruction: "Refaça o pedido do zero no sistema e tente emitir a nota novamente.", question: "Resolveu o problema?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "reconfigurar_emissor_zero" }] },
-                reconfigurar_emissor_zero: { instruction: "Reconfigure as definições do emissor NFSe do zero.", question: "Reconfigurado?", options: [{ label: "Sim, Próximo", next: "limpar_tabela_config" }] },
-                limpar_tabela_config: { instruction: "Na tabela 'softcom_modulo_configurações', apague os dados da NFSe.", question: "A nota subiu agora para a Migrate?", options: [{ label: "Sim", next: "foi_autorizada" }, { label: "Não", next: "abrir_ticket_migrate" }] },
-                foi_autorizada: { question: "A nota foi autorizada na prefeitura?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não (Rejeitada)", next: "verificar_erro_exibe" }] },
-                verificar_erro_exibe: { instruction: "Analise o erro exibido no monitor da Migrate ou Invoicy.", question: "Resolveu com o ajuste?", options: [{ label: "Sim", next: "fim_sucesso" }, { label: "Não", next: "abrir_ticket_migrate" }] },
-                abrir_ticket_migrate: { instruction: "Abra um ticket com a Migrate relatando o incidente.", isEnd: true, type: "action", title: "Fim - Abrir Ticket" },
-                fim_sucesso: { instruction: "Excelente! O problema foi resolvido com sucesso.", isEnd: true, type: "success", title: "Fim - Resolvido" }
-            };
 
             const fetchErrors = async () => {
                 setLoading(true);
@@ -377,6 +356,31 @@ Não foi possível resolver internamente.`;
                 }
             }, [view, filtroAderentes]); // Carrega ao entrar na aba ou ao mudar o filtro
 
+            // Efeito de Animação para o Gráfico e Números
+            useEffect(() => {
+                if (stats.total === 0) return;
+                
+                let start = null;
+                const duration = 2000; // 2 segundos de animação
+                
+                const animate = (timestamp) => {
+                    if (!start) start = timestamp;
+                    const progress = Math.min((timestamp - start) / duration, 1);
+                    const ease = 1 - Math.pow(1 - progress, 4); // EaseOutQuart (suave no final)
+                    
+                    setAnimStats({
+                        total: Math.floor(stats.total * ease),
+                        aderentes: Math.floor(stats.aderentes * ease),
+                        naoAderentes: Math.floor(stats.naoAderentes * ease),
+                        pct: (stats.aderentes / stats.total) * ease
+                    });
+                    
+                    if (progress < 1) requestAnimationFrame(animate);
+                };
+                
+                requestAnimationFrame(animate);
+            }, [stats]);
+
             const handleSyncDatabase = async () => {
                 if (municipiosTemp.length === 0) return alert("Carregue um CSV primeiro.");
                 if (!confirm(`Deseja enviar ${municipiosTemp.length} registros para o banco de dados? Isso atualizará os dados existentes.`)) return;
@@ -415,14 +419,11 @@ Não foi possível resolver internamente.`;
 
                     <div className={`fixed inset-y-0 left-0 w-64 bg-[#2d3e50] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-r border-slate-700 pt-24 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                         <nav className="p-4 flex flex-col gap-2">
-                            <button onClick={() => { setView('erros_mapeados'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'erros_mapeados' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconSearch /> BASE DE SOLUÇÕES
-                            </button>
-                            <button onClick={() => { setView('analise'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'analise' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
-                                <IconHelp /> ASSISTENTE NFSE
-                            </button>
                             <button onClick={() => { setView('verificacao'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'verificacao' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
                                 <IconServer /> VERIFICAÇÃO AMBIENTE
+                            </button>
+                            <button onClick={() => { setView('erros_mapeados'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'erros_mapeados' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
+                                <IconSearch /> BASE DE SOLUÇÕES
                             </button>
                             <button onClick={() => { setView('gerar_ticket'); setMenuOpen(false); }} className={`flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${view === 'gerar_ticket' ? 'bg-[#f59e0b] text-[#2d3e50]' : 'text-slate-300 hover:bg-slate-700'}`}>
                                 <IconTicket /> GERAR TICKET
@@ -481,50 +482,6 @@ Não foi possível resolver internamente.`;
                             </div>
                         )}
 
-                        {view === 'analise' && (
-                            <div className="animate-fadeIn max-w-2xl mx-auto w-full space-y-8">
-                                <div className="text-center">
-                                    <h1 className="text-3xl font-black text-slate-800 italic uppercase leading-none tracking-tighter">Assistente NFSe</h1>
-                                    <p className="text-slate-500 font-medium italic uppercase text-[10px]">Diagnóstico Softcom</p>
-                                </div>
-                                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[420px] flex flex-col">
-                                    <div className="h-2 bg-slate-100 w-full"><div className="h-full bg-[#f59e0b] transition-all duration-500" style={{ width: `${(flowHistory.length / 14) * 100}%` }}></div></div>
-                                    <div className="p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center">
-                                        {flowchart[currentStep].instruction && (
-                                            <div className="bg-amber-50 border-l-4 border-[#f59e0b] p-6 rounded-r-xl w-full mb-8 text-left animate-fadeIn">
-                                                <h3 className="text-amber-800 font-black uppercase text-[10px] mb-1 tracking-widest italic leading-none">Ação Requerida:</h3>
-                                                <p className="text-slate-700 text-lg font-bold leading-tight">{flowchart[currentStep].instruction}</p>
-                                            </div>
-                                        )}
-                                        {!flowchart[currentStep].isEnd ? (
-                                            <div className="space-y-8 w-full animate-fadeIn">
-                                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 italic uppercase leading-tight tracking-tighter">{flowchart[currentStep].question}</h2>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                    {flowchart[currentStep].options.map((opt, i) => (
-                                                        <button key={i} onClick={() => { setFlowHistory([...flowHistory, currentStep]); setCurrentStep(opt.next); }} className="group flex items-center justify-between p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl hover:border-[#f59e0b] hover:bg-amber-50 transition-all text-left">
-                                                            <span className="text-lg font-bold text-[#2d3e50] group-hover:text-amber-900 leading-tight">{opt.label}</span>
-                                                            <div className="bg-white p-2 rounded-full shadow-sm group-hover:bg-[#f59e0b] transition-colors"><IconArrowRight /></div>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="animate-fadeIn flex flex-col items-center text-center space-y-6">
-                                                <div className={`p-8 rounded-full ${flowchart[currentStep].type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-[#2d3e50]'} border-4 border-white shadow-xl`}>
-                                                    {flowchart[currentStep].type === 'success' ? <IconCheck /> : <IconShield />}
-                                                </div>
-                                                <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">{flowchart[currentStep].title}</h2>
-                                                <button onClick={() => { setFlowHistory([]); setCurrentStep('inicio'); }} className="bg-slate-200 text-slate-600 px-10 py-4 rounded-full font-black hover:bg-slate-300 transition-all uppercase tracking-widest text-[10px]">Novo Diagnóstico</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="bg-slate-50 p-4 border-t flex justify-between px-8 text-[10px] font-black uppercase tracking-widest">
-                                        <button onClick={() => { if(flowHistory.length > 0) { const prev = flowHistory[flowHistory.length - 1]; setFlowHistory(flowHistory.slice(0, -1)); setCurrentStep(prev); } }} disabled={flowHistory.length === 0} className="text-slate-400 disabled:opacity-0 hover:text-slate-600 flex items-center gap-1">← Voltar</button>
-                                        <button onClick={() => { setFlowHistory([]); setCurrentStep('inicio'); }} className="text-slate-400 hover:text-red-500">Reiniciar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {view === 'verificacao' && (
                             <div className="animate-fadeIn w-full space-y-8">
@@ -555,35 +512,40 @@ Não foi possível resolver internamente.`;
                                     {/* Gráfico Donut SVG */}
                                     <div className="relative w-48 h-48 flex-shrink-0">
                                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                            <circle cx="50" cy="50" r="40" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
-                                            <circle cx="50" cy="50" r="40" stroke="#10b981" strokeWidth="12" fill="transparent" 
+                                            <defs>
+                                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" style={{stopColor: "#34d399", stopOpacity: 1}} />
+                                                    <stop offset="100%" style={{stopColor: "#10b981", stopOpacity: 1}} />
+                                                </linearGradient>
+                                            </defs>
+                                            <circle cx="50" cy="50" r="40" stroke="#f1f5f9" strokeWidth="10" fill="transparent" />
+                                            <circle cx="50" cy="50" r="40" stroke="url(#grad1)" strokeWidth="10" fill="transparent" 
                                                 strokeDasharray={2 * Math.PI * 40} 
-                                                strokeDashoffset={(2 * Math.PI * 40) - ((stats.aderentes / (stats.total || 1)) * (2 * Math.PI * 40))} 
+                                                strokeDashoffset={(2 * Math.PI * 40) - (animStats.pct * (2 * Math.PI * 40))} 
                                                 strokeLinecap="round" 
-                                                className="transition-all duration-1000 ease-out"
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span className="text-3xl font-black text-slate-700">{stats.total}</span>
+                                            <span className="text-4xl font-black text-slate-700">{animStats.total}</span>
                                             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Municípios</span>
                                         </div>
                                     </div>
                                     
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full md:w-auto">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-sm"><IconCheck /></div>
+                                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-sm"><IconCheck /></div>
                                             <div>
-                                                <div className="text-3xl font-black text-slate-700">{stats.aderentes}</div>
+                                                <div className="text-3xl font-black text-slate-700">{animStats.aderentes}</div>
                                                 <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">100% Aderentes</div>
-                                                <div className="text-[10px] font-bold text-emerald-500">{stats.total > 0 ? ((stats.aderentes / stats.total) * 100).toFixed(1) : 0}% do total</div>
+                                                <div className="text-[10px] font-bold text-emerald-500">{(animStats.pct * 100).toFixed(1)}% do total</div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center shadow-sm"><IconServer /></div>
+                                            <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center shadow-sm"><IconServer /></div>
                                             <div>
-                                                <div className="text-3xl font-black text-slate-700">{stats.naoAderentes}</div>
+                                                <div className="text-3xl font-black text-slate-700">{animStats.naoAderentes}</div>
                                                 <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Pendentes</div>
-                                                <div className="text-[10px] font-bold text-slate-400">{stats.total > 0 ? ((stats.naoAderentes / stats.total) * 100).toFixed(1) : 0}% do total</div>
+                                                <div className="text-[10px] font-bold text-slate-400">{(100 - (animStats.pct * 100)).toFixed(1)}% do total</div>
                                             </div>
                                         </div>
                                     </div>
