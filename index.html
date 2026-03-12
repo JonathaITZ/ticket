@@ -147,6 +147,7 @@
             const [searchMun, setSearchMun] = useState('');
             const [loadingMun, setLoadingMun] = useState(false);
             const [filtroAderentes, setFiltroAderentes] = useState(false);
+            const [filtroUF, setFiltroUF] = useState('');
             const [stats, setStats] = useState({ total: 0, aderentes: 0, naoAderentes: 0 });
             const [animStats, setAnimStats] = useState({ total: 0, aderentes: 0, naoAderentes: 0, pct: 0 });
             
@@ -179,6 +180,8 @@
                 { portal: "Invoicy", user: "renato.rodrigues@softcomtecnologia.com.br", pass: "Softcom12" },
                 { portal: "Migrate", user: "suporte.nfse.softcom@gmail.com", pass: "Sfc@3321" }
             ];
+
+            const listaUFs = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
 
             const fetchErrors = async () => {
                 setLoading(true);
@@ -249,6 +252,10 @@
 
                     if (filtroAderentes) {
                         query.eq('AderenteAmbienteNacional', 'Sim').eq('AderenteEmissorNacional', 'Sim');
+                    }
+
+                    if (filtroUF) {
+                        query.eq('UF', filtroUF);
                     }
 
                     if (termo) {
@@ -330,17 +337,30 @@
 
             const fetchStats = async () => {
                 try {
-                    const { count: total, error: errTotal } = await supabase.from('municipios').select('*', { count: 'exact', head: true });
+                    // 1. Consulta Total (considerando filtro UF)
+                    let queryTotal = supabase.from('municipios').select('*', { count: 'exact', head: true });
+                    if (filtroUF) queryTotal = queryTotal.eq('UF', filtroUF);
                     
-                    let { count: aderentes, error: errAderentes } = await supabase.from('municipios').select('*', { count: 'exact', head: true })
+                    const { count: total, error: errTotal } = await queryTotal;
+                    
+                    // 2. Consulta Aderentes (considerando filtro UF)
+                    let queryAderentes = supabase.from('municipios').select('*', { count: 'exact', head: true })
                         .eq('AderenteAmbienteNacional', 'Sim')
                         .eq('AderenteEmissorNacional', 'Sim');
+                    
+                    if (filtroUF) queryAderentes = queryAderentes.eq('UF', filtroUF);
                         
-                    // Fallback para minúsculas se falhar
+                    let { count: aderentes, error: errAderentes } = await queryAderentes;
+                        
+                    // Fallback para colunas em minúsculo se falhar a primeira tentativa
                     if (errAderentes) {
-                        const { count: aderentesLow } = await supabase.from('municipios').select('*', { count: 'exact', head: true })
+                        let queryLow = supabase.from('municipios').select('*', { count: 'exact', head: true })
                             .eq('aderenteambientenacional', 'Sim')
                             .eq('aderenteemissornacional', 'Sim');
+                            
+                        if (filtroUF) queryLow = queryLow.eq('uf', filtroUF);
+
+                        const { count: aderentesLow } = await queryLow;
                         if (aderentesLow !== null) aderentes = aderentesLow;
                     }
 
@@ -421,7 +441,7 @@ Não foi possível resolver internamente.`;
                     fetchMunicipios(searchMun);
                     fetchStats();
                 }
-            }, [view, filtroAderentes]); // Carrega ao entrar na aba ou ao mudar o filtro
+            }, [view, filtroAderentes, filtroUF]); // Carrega ao entrar na aba ou ao mudar o filtro
 
             // Efeito de Animação para o Gráfico e Números
             useEffect(() => {
@@ -557,7 +577,7 @@ Não foi possível resolver internamente.`;
                                         <div className="bg-[#f59e0b] p-3 rounded-2xl text-[#2d3e50] shadow-lg"><IconSearch /></div>
                                         <div>
                                             <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Consultar Municípios</h2>
-                                            <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">Base de Dados Nacional</p>
+                                            <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">{filtroUF ? `Panorama - ${filtroUF}` : 'Base de Dados Nacional'}</p>
                                         </div>
                                     </div>
 
@@ -649,7 +669,7 @@ Não foi possível resolver internamente.`;
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                                             <span className="text-4xl font-black text-slate-700">{animStats.total}</span>
-                                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Municípios</span>
+                                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{filtroUF ? `Total ${filtroUF}` : 'Nacional'}</span>
                                         </div>
                                     </div>
                                     
@@ -675,6 +695,19 @@ Não foi possível resolver internamente.`;
 
                                 <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex items-center gap-6">
                                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Filtros:</span>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Estado:</span>
+                                        <select 
+                                            value={filtroUF} 
+                                            onChange={(e) => setFiltroUF(e.target.value)}
+                                            className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-lg p-2 px-3 outline-none focus:border-[#f59e0b] cursor-pointer hover:bg-slate-100 transition-colors"
+                                        >
+                                            <option value="">Todos</option>
+                                            {listaUFs.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+                                        </select>
+                                    </div>
+
                                     <label className="flex items-center gap-3 cursor-pointer select-none">
                                         <input 
                                             type="checkbox" 
