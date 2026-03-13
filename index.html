@@ -259,6 +259,8 @@
             const [errorInput, setErrorInput] = useState('');
             const [solutionInput, setSolutionInput] = useState('');
             const [videoInput, setVideoInput] = useState('');
+            const [categoryInput, setCategoryInput] = useState('Softshop');
+            const [filterCategory, setFilterCategory] = useState(''); // '' = Todos
             
             const [saveStatus, setSaveStatus] = useState(null);
             const [copyStatus, setCopyStatus] = useState({});
@@ -266,6 +268,7 @@
             const [editErrorInput, setEditErrorInput] = useState('');
             const [editSolutionInput, setEditSolutionInput] = useState('');
             const [editVideoInput, setEditVideoInput] = useState('');
+            const [editCategoryInput, setEditCategoryInput] = useState('Softshop');
             
             const [isEspecialistaAuthed, setIsEspecialistaAuthed] = useState(false);
             const [pinInput, setPinInput] = useState('');
@@ -340,6 +343,7 @@
                 setEditErrorInput(item.erro);
                 setEditSolutionInput(item.solucao);
                 setEditVideoInput(item.video_url || '');
+                setEditCategoryInput(item.categoria || 'Softshop');
                 setEditingError(item);
             };
 
@@ -349,7 +353,8 @@
                 const { error } = await supabase.from('mapped_errors').update({ 
                     erro: editErrorInput, 
                     solucao: editSolutionInput,
-                    video_url: editVideoInput
+                    video_url: editVideoInput,
+                    categoria: editCategoryInput
                 }).eq('id', editingError.id);
                 
                 if (error) setSaveStatus('error');
@@ -360,7 +365,7 @@
                         setSaveStatus(null);
                         setEditingError(null);
                         if(selectedError && selectedError.id === editingError.id) {
-                            setSelectedError({...selectedError, erro: editErrorInput, solucao: editSolutionInput, video_url: editVideoInput});
+                            setSelectedError({...selectedError, erro: editErrorInput, solucao: editSolutionInput, video_url: editVideoInput, categoria: editCategoryInput});
                         }
                     }, 1000);
                 }
@@ -372,12 +377,13 @@
                 const { error } = await supabase.from('mapped_errors').insert([{ 
                     erro: errorInput, 
                     solucao: solutionInput,
-                    video_url: videoInput
+                    video_url: videoInput,
+                    categoria: categoryInput
                 }]);
                 if (error) setSaveStatus('error');
                 else {
                     setSaveStatus('success');
-                    setErrorInput(''); setSolutionInput(''); setVideoInput('');
+                    setErrorInput(''); setSolutionInput(''); setVideoInput(''); setCategoryInput('Softshop');
                     fetchErrors();
                     setTimeout(() => { setSaveStatus(null); setView('erros_mapeados'); }, 1500);
                 }
@@ -515,10 +521,19 @@
             };
 
             const filteredErrors = useMemo(() => {
-                if (!searchQuery) return mappedErrors;
-                const q = searchQuery.toLowerCase();
-                return mappedErrors.filter(e => e.erro.toLowerCase().includes(q) || e.solucao.toLowerCase().includes(q));
-            }, [mappedErrors, searchQuery]);
+                let filtered = mappedErrors;
+                
+                if (filterCategory) {
+                    filtered = filtered.filter(e => e.categoria === filterCategory);
+                }
+                
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    filtered = filtered.filter(e => e.erro.toLowerCase().includes(q) || e.solucao.toLowerCase().includes(q));
+                }
+                
+                return filtered;
+            }, [mappedErrors, searchQuery, filterCategory]);
 
             const copyToClipboard = (text, key) => {
                 const textArea = document.createElement("textarea");
@@ -688,7 +703,24 @@ Não foi possível resolver internamente.`;
                                         <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase italic tracking-tighter leading-none">Base de Soluções</h2>
                                     </div>
                                     
-                                    <div className="relative w-full max-w-md group">
+                                    <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                                        {/* Dropdown de Filtro */}
+                                        <div className="relative">
+                                            <select 
+                                                value={filterCategory} 
+                                                onChange={(e) => setFilterCategory(e.target.value)}
+                                                className="w-full md:w-48 h-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white font-bold rounded-2xl px-4 py-4 outline-none focus:border-[#f59e0b] appearance-none cursor-pointer shadow-sm transition-all"
+                                            >
+                                                <option value="">Todos os Sistemas</option>
+                                                <option value="Softshop">Softshop</option>
+                                                <option value="Invoicy">Invoicy</option>
+                                            </select>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </div>
+                                        </div>
+
+                                        <div className="relative w-full max-w-md group">
                                         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#f59e0b] transition-colors pointer-events-none">
                                             <IconSearch />
                                         </div>
@@ -697,7 +729,7 @@ Não foi possível resolver internamente.`;
                                             value={searchQuery} 
                                             onChange={(e) => setSearchQuery(e.target.value)} 
                                             placeholder="Buscar erro, código ou solução..." 
-                                            className="w-full pl-14 pr-12 py-4 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white border-2 border-slate-200 rounded-2xl outline-none focus:border-[#f59e0b] focus:shadow-lg font-bold shadow-sm transition-all placeholder:font-medium placeholder:text-slate-400" 
+                                            className="w-full md:w-80 pl-14 pr-12 py-4 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white border-2 border-slate-200 rounded-2xl outline-none focus:border-[#f59e0b] focus:shadow-lg font-bold shadow-sm transition-all placeholder:font-medium placeholder:text-slate-400" 
                                         />
                                         {searchQuery && (
                                             <button 
@@ -709,6 +741,7 @@ Não foi possível resolver internamente.`;
                                             </button>
                                         )}
                                     </div>
+                                    </div>
                                 </div>
                                 {loading ? (
                                     <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div></div>
@@ -719,10 +752,17 @@ Não foi possível resolver internamente.`;
                                                 {/* Acento Superior */}
                                                 <div className="h-1.5 w-full bg-gradient-to-r from-[#f59e0b] to-amber-200"></div>
                                                 
-                                                <div className="p-5 md:p-6 flex flex-col flex-1">
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div className="p-3 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-[#f59e0b] group-hover:text-white transition-colors duration-300 shadow-sm">
-                                                            <IconFileText />
+                                                <div className="p-4 md:p-6 flex flex-col flex-1">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`p-3 rounded-2xl transition-colors duration-300 shadow-sm ${item.categoria === 'Invoicy' ? 'bg-indigo-50 text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-[#f59e0b] group-hover:text-white'}`}>
+                                                                <IconFileText />
+                                                            </div>
+                                                            {item.categoria && (
+                                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full border ${item.categoria === 'Invoicy' ? 'bg-indigo-50 text-indigo-500 border-indigo-100' : 'bg-orange-50 text-orange-500 border-orange-100'}`}>
+                                                                    {item.categoria}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <div className="flex gap-1">
                                                             {item.video_url && <div className="text-emerald-500 bg-emerald-50 p-2 rounded-xl" title="Possui vídeo"><IconVideo /></div>}
@@ -1051,6 +1091,13 @@ Não foi possível resolver internamente.`;
                                         
                                         <div className="space-y-6 relative z-10">
                                             <div>
+                                                <label className="text-[10px] font-bold uppercase text-slate-400 mb-2 block tracking-widest">Sistema</label>
+                                                <div className="flex bg-slate-800/50 p-1 rounded-xl border border-slate-700">
+                                                    <button type="button" onClick={() => setCategoryInput('Softshop')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${categoryInput === 'Softshop' ? 'bg-[#f59e0b] text-[#2d3e50] shadow-lg' : 'text-slate-400 hover:bg-slate-700'}`}>Softshop</button>
+                                                    <button type="button" onClick={() => setCategoryInput('Invoicy')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${categoryInput === 'Invoicy' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-700'}`}>Invoicy</button>
+                                                </div>
+                                            </div>
+                                            <div>
                                                 <label className="text-[10px] font-bold uppercase text-slate-400 mb-2 block tracking-widest">Mensagem de Erro</label>
                                                 <RichInput required rows={4} value={errorInput} onChange={(e) => setErrorInput(e.target.value)} placeholder="Cole aqui a mensagem de erro exata..." className="w-full p-3 md:p-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-white placeholder-slate-500 outline-none focus:border-[#f59e0b] transition-all font-medium custom-scrollbar resize-none shadow-inner" />
                                             </div>
@@ -1165,7 +1212,7 @@ Não foi possível resolver internamente.`;
                             <div className="w-full h-full flex flex-col relative overflow-hidden">
                                 
                                 {/* Header com Gradiente */}
-                                <div className="relative bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 p-6 md:p-10 flex justify-between items-start flex-shrink-0">
+                                <div className="relative bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 p-5 md:p-10 flex justify-between items-start flex-shrink-0">
                                     <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#f59e0b] to-amber-200"></div>
                                     
                                     <div className="pr-10 w-full">
@@ -1173,6 +1220,11 @@ Não foi possível resolver internamente.`;
                                             <span className="bg-[#f59e0b]/10 text-[#f59e0b] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#f59e0b]/20 shadow-sm">
                                                 Solução Catalogada
                                             </span>
+                                            {selectedError.categoria && (
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${selectedError.categoria === 'Invoicy' ? 'bg-indigo-50 text-indigo-500 border-indigo-200' : 'bg-orange-50 text-orange-500 border-orange-200'}`}>
+                                                    {selectedError.categoria}
+                                                </span>
+                                            )}
                                         </div>
                                         <h2 className="text-xl md:text-3xl font-black text-[#2d3e50] dark:text-white tracking-tight leading-snug break-words max-h-60 overflow-y-auto custom-scrollbar pr-4">
                                             {selectedError.erro}
@@ -1247,6 +1299,13 @@ Não foi possível resolver internamente.`;
                                     <button onClick={() => setEditingError(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><IconX /></button>
                                 </div>
                                 <form onSubmit={handleUpdateError} className="p-5 md:p-10 space-y-6 bg-slate-50 dark:bg-slate-900 overflow-y-auto custom-scrollbar">
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase text-slate-400 mb-2 leading-none">Sistema</label>
+                                        <div className="flex bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <button type="button" onClick={() => setEditCategoryInput('Softshop')} className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${editCategoryInput === 'Softshop' ? 'bg-[#f59e0b] text-[#2d3e50] shadow-md' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Softshop</button>
+                                            <button type="button" onClick={() => setEditCategoryInput('Invoicy')} className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${editCategoryInput === 'Invoicy' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Invoicy</button>
+                                        </div>
+                                    </div>
                                     <div>
                                         <label className="text-[10px] font-black uppercase text-slate-400 mb-2 leading-none">Erro</label>
                                         <RichInput required rows={2} value={editErrorInput} onChange={(e) => setEditErrorInput(e.target.value)} className="w-full p-3 md:p-5 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#f59e0b] font-bold" />
